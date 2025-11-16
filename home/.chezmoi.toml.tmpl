@@ -1,0 +1,38 @@
+{{- /* Initialize feature tags */}}
+{{- $personal := false -}}
+{{- $work := false -}}
+
+{{- /* Determine the hostname */}}
+{{- $hostname := .chezmoi.hostname -}}
+
+{{- /* Set machine type based on hostname */}}
+{{- if eq $hostname "legion" -}}
+{{-   $personal = true -}}
+{{- else -}}
+{{-   $work = true -}}
+{{- end -}}
+
+{{- /* Set default email and other values */}}
+{{- $email := "feelproud@protonmail.com" -}}
+{{- if $work -}}
+{{-   $email = "marc.le-pech@niji.fr" -}}
+{{- end -}}
+
+{{- $osID := .chezmoi.os -}}
+{{- if (and (eq .chezmoi.os "linux") (hasKey .chezmoi.osRelease "id")) -}}
+{{-   $osID = printf "%s-%s" .chezmoi.os .chezmoi.osRelease.id -}}
+{{- end -}}
+
+[data]
+    email = {{ $email | quote }}
+    work = {{ $work }}
+    hostname = {{ $hostname | quote }}
+    personal = {{ $personal }}
+    osid = {{ $osID | quote }}
+    zshPlugins = [
+        "git",
+        "archlinux",
+        "zsh-autosuggestions",
+        "zsh-syntax-highlighting",
+    ]
+

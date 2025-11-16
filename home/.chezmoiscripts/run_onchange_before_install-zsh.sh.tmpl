@@ -1,0 +1,45 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+zsh=(
+	eza
+	zsh
+	zsh-completions
+	fzf
+)
+
+install_package() {
+  # Checking if package is already installed
+  if paru -Q "$1" &>> /dev/null ; then
+    echo -e "${OK} $1 is already installed. Skipping..."
+  else
+    # Package not installed
+    echo -e "${NOTE} Installing $1 ..."
+    paru -S --noconfirm "$1"
+    # Making sure package is installed
+    if paru -Q "$1" &>> /dev/null ; then
+      echo -e "\e[1A\e[K${OK} $1 was installed."
+    else
+      # Something is missing, exiting to review log
+      echo -e "\e[1A\e[K${ERROR} $1 failed to install :( , please check the install.log. You may need to install manually! Sorry I have tried :("
+      exit 1
+    fi
+  fi
+}
+
+# Installing zsh packages
+printf "${NOTE} Installing core zsh packages...${RESET}\n"
+for ZSH in "${zsh[@]}"; do
+  install_package "$ZSH" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $ZSH Package installation failed, Please check the installation logs"
+  fi
+done

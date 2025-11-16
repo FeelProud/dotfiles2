@@ -1,0 +1,67 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+for login_manager in lightdm gdm lxdm lxdm-gtk3 sddm; do
+  if pacman -Qs "$login_manager" > /dev/null; then
+    echo "disabling $login_manager..."
+    sudo systemctl disable "$login_manager.service" 2>&1 || true
+    sudo systemctl stop "$login_manager.service" 2>&1 || true
+  fi
+done
+
+# ----------------------
+# Autologin without a DM
+# ----------------------
+
+printf " Setting up configuration to not use a Display Manager........\n"
+
+USER_TO_AUTOLOGIN="${1:-${SUDO_USER:-$(logname 2>/dev/null || true)}}"
+TTY="tty1"
+AGETTY_BIN="$(command -v agetty || echo /usr/bin/agetty)"
+
+if [[ -z "${USER_TO_AUTOLOGIN}" ]]; then
+  echo -e "${ERROR} Could not determine the user. Run as: $0 <username>"
+  exit 1
+fi
+
+if ! id "${USER_TO_AUTOLOGIN}" &>/dev/null; then
+  echo -e "${ERROR} User '${USER_TO_AUTOLOGIN}' does not exist."
+  exit 1
+fi
+
+# Prevent any DM from starting via the alias
+sudo systemctl mask display-manager.service 2>/dev/null || true
+echo -e "${OK} display-manager.service masked."
+
+echo -e "${NOTE} Setting default boot target to multi-user.target (no GUI)."
+sudo systemctl set-default multi-user.target && echo -e "${OK} Default target set."
+
+echo -e "${NOTE} Configuring autologin for '${USER_TO_AUTOLOGIN}' on ${TTY}."
+OVR_DIR="/etc/systemd/system/getty@${TTY}.service.d"
+sudo mkdir -p "${OVR_DIR}"
+sudo tee "${OVR_DIR}/override.conf" >/dev/null <<EOF
+[Service]
+ExecStart=
+ExecStart=-${AGETTY_BIN} --autologin ${USER_TO_AUTOLOGIN} --noclear %I \$TERM
+Type=idle
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable "getty@${TTY}.service" >/dev/null 2>&1 || true
+
+echo -e "${OK} Autologin configured for ${YELLOW}${USER_TO_AUTOLOGIN}${RESET} on ${YELLOW}${TTY}${RESET}."
+echo -e "${NOTE} Hyprland will auto-start from existing ~/.zprofile on ${TTY}."
+echo -e "${NOTE} No services were restarted; changes take effect on the next reboot."
+
+# Optional: quick verification (does not restart anything)
+systemctl --no-pager --full status "getty@${TTY}.service" || true
+
+echo -e "${OK} Done."

@@ -1,0 +1,79 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+hypr=(
+  hyprcursor
+  hyprutils
+  aquamarine
+  hypridle
+  hyprlock
+  hyprland
+  pyprland
+  hyprland-qtutils
+)
+
+install_package() {
+  # Checking if package is already installed
+  if paru -Q "$1" &>> /dev/null ; then
+    echo -e "${OK} $1 is already installed. Skipping..."
+  else
+    # Package not installed
+    echo -e "${NOTE} Installing $1 ..."
+    paru -S --noconfirm "$1" 2>&1
+    # Making sure package is installed
+    if paru -Q "$1" &>> /dev/null ; then
+      echo -e "\e[1A\e[K${OK} $1 was installed."
+    else
+      # Something is missing, exiting to review log
+      echo -e "\e[1A\e[K${ERROR} $1 failed to install :( , please check the install.log. You may need to install manually! Sorry I have tried :("
+      exit 1
+    fi
+  fi
+}
+
+uninstall_package() {
+  local pkg="$1"
+
+  # Checking if package is installed
+  if pacman -Qi "$pkg" &>> /dev/null ; then
+    # Package is installed
+    echo -e "${NOTE} Uninstalling $pkg ..."
+    sudo pacman -R --noconfirm "$pkg" 2>&1 | grep -v "error: target not found"
+    # Check if the package was uninstalled
+    if ! pacman -Qi "$pkg" &>> /dev/null ; then
+      echo -e "\e[1A\e[K${OK} $pkg was uninstalled."
+    else
+      echo -e "\e[1A\e[K${ERROR} $pkg failed to uninstall. Please check the log."
+      return 1 
+    fi
+  else
+    echo -e "${NOTE} $pkg is not installed, skipping uninstallation."
+  fi
+  return 0 
+}
+
+# Removing other Hyprland to avoid conflict
+printf "${YELLOW} Checking for other hyprland packages and remove if any..${RESET}\n"
+if [ "$(command -v Hyprland)" ]; then
+  printf "${YELLOW} Hyprland detected. uninstalling to install Hyprland-git...${RESET}\n"
+  for hyprnvi in hyprland-git hyprland-nvidia hyprland-nvidia-git hyprland-nvidia-hidpi-git; do
+    uninstall_package "$hyprnvi" 2>/dev/null
+  done
+fi
+
+# Installing hyprland packages
+printf "${NOTE} Installing core hyprland packages...${RESET}\n"
+for HYPR in "${hypr[@]}"; do
+  install_package "$HYPR" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $HYPR Package installation failed, Please check the installation logs"
+  fi
+done

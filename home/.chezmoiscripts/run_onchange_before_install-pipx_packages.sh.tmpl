@@ -1,0 +1,68 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+# Make sure pipx is discoverable even in the same session
+export PATH="$HOME/.local/bin:$PATH"
+hash -r 2>/dev/null || true
+
+# List of pipx packages to install
+pipx_packages=(
+  bypass-url-parser
+  exegol
+)
+
+pipx_installed() {
+  pipx list 2>/dev/null | awk '/^package /{print $2}' | grep -Fxq "$1"
+}
+
+install_pipx_package() {
+  local pkg="$1"
+  if pipx_installed "$pkg"; then
+    printf "${OK} %s is already installed (pipx). Skipping...\n" "$pkg"
+  else
+    printf "${NOTE} Installing %s with pipx...\n" "$pkg"
+    pipx install "$pkg" 2>&1
+    if pipx_installed "$pkg"; then
+      printf "%b\n" "\e[1A\e[K${OK} $pkg was installed."
+    else
+      printf "%b\n" "\e[1A\e[K${ERROR} $pkg failed to install :( , please check the log."
+      exit 1
+    fi
+  fi
+}
+
+printf "${NOTE} Installing pipx packages...\n"
+
+# Require pipx but DO NOT install it; skip if missing
+if ! command -v pipx >/dev/null 2>&1; then
+  printf "${WARN} pipx not found on PATH. Skipping pipx package installation.\n"
+  printf "${CAT} Tip: install 'python-pipx' first (e.g., with paru) then re-run.\n"
+  exit 0
+fi
+
+# Ensure PATH is set in future shells (no-op if already done)
+pipx ensurepath >/dev/null 2>&1 || true
+
+for P in "${pipx_packages[@]}"; do
+  install_pipx_package "$P"
+done
+
+# Summary
+summary=""
+for P in "${pipx_packages[@]}"; do
+  if pipx_installed "$P"; then
+    summary+="$P: installed; "
+  else
+    summary+="$P: not installed; "
+  fi
+done
+printf "${NOTE} pipx summary — %s\n" "${summary%??}"
+printf "${OK} Installation complete.\n"

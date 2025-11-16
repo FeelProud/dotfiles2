@@ -1,0 +1,33 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+while true; do
+    echo "${NOTE} Adding user to the 'input' group."    
+    printf "\n%.0s" {1..1}
+    
+    if grep -q '^input:' /etc/group; then
+        echo "${OK} 'input' group exists."
+    else
+        echo "${NOTE} 'input' group doesn't exist. Creating 'input' group..."
+        sudo groupadd input
+
+        # Log the creation of the 'input' group
+        echo "'input' group created" >> "$LOG"
+    fi
+
+    # Add the user to the input group
+    sudo usermod -aG input "$(whoami)"
+    echo "${OK} User added to the 'input' group. Changes will take effect after you log out and log back in."
+
+    # Log the addition of the user to the 'input' group
+    echo "User added to 'input' group" >> "$LOG"
+    break  # Break out of the loop if 'yes' is chosen
+done

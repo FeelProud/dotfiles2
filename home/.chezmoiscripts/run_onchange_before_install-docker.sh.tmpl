@@ -1,0 +1,57 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+USER_NAME="$(logname 2>/dev/null)"
+
+install_package() {
+  # Checking if package is already installed
+  if paru -Q "$1" &>> /dev/null ; then
+    printf "${OK} %s is already installed. Skipping...\n" "$1"
+  else
+    # Package not installed
+    printf "${NOTE} Installing %s ...\n" "$1"
+    paru -S --noconfirm "$1" 2>&1
+    # Making sure package is installed
+    if paru -Q "$1" &>> /dev/null ; then
+      printf "%b\n" "\e[1A\e[K${OK} $1 was installed."
+    else
+      # Something is missing, exiting to review log
+      printf "%b\n" "\e[1A\e[K${ERROR} $1 failed to install :( , please check the install.log. You may need to install manually! Sorry I have tried :("
+      exit 1
+    fi
+  fi
+}
+
+# Info header
+printf "${NOTE} Installing Docker and related tools for user: ${YELLOW}%s${RESET}\n" "$USER_NAME"
+
+# Install Docker and Compose plugin via paru
+install_package docker
+install_package docker-compose
+
+# Enable & start Docker
+printf "${NOTE} Enabling and starting docker.service...\n"
+sudo systemctl enable --now docker.service 2>&1 || printf "${WARN} Could not enable/start docker.service. It may already be running.\n"
+
+# Add current user to docker group
+printf "${NOTE} Adding ${YELLOW}%s${RESET} to 'docker' group...\n" "$USER_NAME"
+if sudo usermod -aG docker "$USER_NAME" 2>&1; then
+  printf "${OK} User '%s' added to 'docker' group.\n" "$USER_NAME"
+else
+  printf "${ERROR} Failed to add user to 'docker' group.\n"
+  exit 1
+fi
+
+# Confirmation (merged versions)
+docker_ver="$(docker --version 2>/dev/null || echo 'not available in PATH yet')"
+compose_ver="$(docker compose version 2>/dev/null || echo 'plugin not available yet')"
+printf "${NOTE} Versions — Docker: %s | Compose: %s\n" "$docker_ver" "$compose_ver"
+printf "${OK} Installation complete."
