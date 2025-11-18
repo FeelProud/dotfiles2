@@ -20,7 +20,9 @@ pipx_packages=(
 )
 
 pipx_installed() {
-  pipx list 2>/dev/null | awk '/^package /{print $2}' | grep -Fxq "$1"
+  pipx list --short 2>/dev/null \
+    | awk '{print $1}' \
+    | grep -Fxq "$1"
 }
 
 install_pipx_package() {
