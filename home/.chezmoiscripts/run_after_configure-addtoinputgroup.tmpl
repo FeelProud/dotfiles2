@@ -18,9 +18,6 @@ while true; do
     else
         echo "${NOTE} 'input' group doesn't exist. Creating 'input' group..."
         sudo groupadd input
-
-        # Log the creation of the 'input' group
-        echo "'input' group created" >> "$LOG"
     fi
 
     # Add the user to the input group
@@ -28,6 +25,5 @@ while true; do
     echo "${OK} User added to the 'input' group. Changes will take effect after you log out and log back in."
 
     # Log the addition of the user to the 'input' group
-    echo "User added to 'input' group" >> "$LOG"
     break  # Break out of the loop if 'yes' is chosen
 done
