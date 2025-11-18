@@ -1,0 +1,45 @@
+# If you come from bash you might have to change your $PATH.
+# export PATH="$HOME/bin:/usr/local/bin:$PATH"
+#
+# Archlinux plugins
+# https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/archlinux
+
+# Oh My Zsh
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="xiong-chiamiov-plus"
+
+# Plugins (Arch Linux + UX helpers)
+plugins=(
+  git
+  archlinux
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+)
+
+source "$ZSH/oh-my-zsh.sh"
+
+# Fastfetch
+{{- if .personal -}}
+fastfetch -c "$HOME/.config/fastfetch/config/config-perso.jsonc"
+{{- else if .work -}}
+fastfetch -c "$HOME/.config/fastfetch/config/config-pro.jsonc"
+{{- else -}}
+fastfetch
+{{- end -}}
+
+# Aliases (eza with icons)
+alias ls='eza -a --icons'
+alias ll='eza -al --icons'
+alias lt='eza -a --tree --level=1 --icons'
+
+# FZF key bindings (Ctrl-R fuzzy history)
+source <(fzf --zsh)
+
+# History
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt appendhistory
+
+# For exegol
+alias exegol="sudo -E \"$HOME/.local/bin/exegol\""
