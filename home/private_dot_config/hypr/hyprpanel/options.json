@@ -1,0 +1,89 @@
+{
+  "bar.layouts": {
+    "0": {
+      "left": [
+        "dashboard",
+        "workspaces",
+        "windowtitle"
+      ],
+      "middle": [
+        "media"
+      ],
+      "right": [
+        "volume",
+        "network",
+        "bluetooth",
+        "systray",
+        "clock",
+        "notifications"
+      ]
+    }
+  },
+  "theme.bar.transparent": true,
+  "theme.bar.background": "rgba(0, 0, 0, 0.6)",
+  "theme.bar.buttons.style": "default",
+  "theme.bar.buttons.monochrome": true,
+  "theme.bar.buttons.text_h_align": "center",
+  "bar.launcher.autoDetectIcon": true,
+  "bar.workspaces.show_numbered": false,
+  "bar.workspaces.workspaces": 10,
+  "bar.workspaces.monitorSpecific": false,
+  "bar.workspaces.hideUnoccupied": false,
+  "bar.windowtitle.label": true,
+  "bar.volume.label": false,
+  "bar.network.label": false,
+  "bar.bluetooth.label": false,
+  "bar.clock.format": "%a %b %d  %I:%M %p",
+  "bar.notifications.show_total": true,
+  "theme.notification.border_radius": "8px",
+  "theme.osd.enable": true,
+  "theme.osd.orientation": "vertical",
+  "theme.osd.location": "right",
+  "menus.clock.weather.location": "",
+  "menus.clock.weather.key": "",
+  "menus.clock.weather.unit": "metric",
+  "theme.bar.menus.monochrome": true,
+  "theme.bar.menus.background": "rgba(0, 0, 0, 0.8)",
+  "theme.bar.menus.cards": "rgba(255, 255, 255, 0.05)",
+  "theme.bar.menus.label": "rgba(255, 255, 255, 0.8)",
+  "theme.bar.menus.text": "rgba(255, 255, 255, 0.8)",
+  "theme.bar.menus.border.size": "1px",
+  "theme.bar.menus.border.color": "rgba(255, 255, 255, 0.2)",
+  "theme.bar.menus.border.radius": "8px",
+  "theme.bar.menus.popover.text": "rgba(255, 255, 255, 0.8)",
+  "theme.bar.menus.popover.background": "rgba(30, 30, 30, 0.8)",
+  "theme.bar.menus.listitems.active": "rgba(255, 255, 255, 0.1)",
+  "theme.bar.menus.icons.active": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.switch.enabled": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.check_radio_button.active": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.buttons.default": "rgba(255, 255, 255, 0.1)",
+  "theme.bar.menus.buttons.active": "rgba(255, 255, 255, 0.2)",
+  "theme.bar.menus.iconbuttons.active": "rgba(255, 255, 255, 0.2)",
+  "theme.bar.menus.progressbar.foreground": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.slider.primary": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.tooltip.background": "rgba(0, 0, 0, 0.9)",
+  "theme.bar.menus.tooltip.text": "rgba(255, 255, 255, 0.9)",
+  "theme.bar.menus.dropdownmenu.background": "rgba(30, 30, 30, 0.9)",
+  "theme.bar.menus.dropdownmenu.text": "rgba(255, 255, 255, 0.8)",
+  "wallpaper.enable": false,
+  "theme.bar.location": "top",
+  "bar.customModules.updates.pollingInterval": 1440000,
+  "theme.font.name": "Ubuntu Nerd Font",
+  "theme.font.size": "14px",
+  "bar.layouts.*.left": [
+    "dashboard",
+    "workspaces",
+    "windowtitle"
+  ],
+  "bar.layouts.*.middle": [
+    "media"
+  ],
+  "bar.layouts.*.right": [
+    "volume",
+    "network",
+    "bluetooth",
+    "systray",
+    "clock",
+    "notifications"
+  ]
+}
