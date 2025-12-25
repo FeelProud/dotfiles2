@@ -1,0 +1,51 @@
+.battery-widget {
+  padding: 4px 8px;
+}
+
+.battery-menu {
+  background: rgba(0, 0, 0, 0.9);
+  padding: 6px;
+  min-width: 200px;
+}
+
+.battery-status {
+  padding: 8px;
+  margin-bottom: 4px;
+}
+
+.battery-status > label {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.current-profile {
+  font-size: 12px;
+  opacity: 0.8;
+  padding: 8px;
+}
+
+.profile-separator {
+  min-height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 4px 0;
+}
+
+.separator {
+  min-height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 3px 0;
+}
+
+.profile-buttons > button {
+  padding: 6px 12px;
+  margin: 2px 0;
+}
+
+.profile-buttons > button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.profile-buttons > button.active {
+  background: rgba(255, 255, 255, 0.15);
+  border-left: 3px solid rgba(255, 255, 255, 0.6);
+}

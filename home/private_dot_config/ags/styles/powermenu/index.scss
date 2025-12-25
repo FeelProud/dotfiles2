@@ -1,0 +1,17 @@
+.power-button {
+  padding: 4px 8px;
+
+  .power-menu {
+    background: rgba(0, 0, 0, 0.9);
+    padding: 8px;
+
+    .power-option {
+      padding: 8px 16px;
+      margin: 2px 0;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+}

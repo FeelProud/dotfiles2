@@ -1,0 +1,42 @@
+window.TopBar {
+  background: transparent;
+  color: white;
+  font-weight: bold;
+
+  > centerbox {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+
+    > box {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 1px 3px;
+      margin: 0;
+    }
+  }
+
+  > centerbox > box[type=start] {
+    border-radius: 0 0 4px 0;
+  }
+
+  > centerbox > box[type=center] {
+    border-radius: 0 0 4px 4px;
+  }
+
+  > centerbox > box[type=end] {
+    border-radius: 0 0 0 4px;
+  }
+
+  button {
+    border-radius: 4px;
+    margin: 1px;
+    padding: 2px 4px;
+    background: transparent;
+    border: none;
+    transition: background-color 200ms;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+}

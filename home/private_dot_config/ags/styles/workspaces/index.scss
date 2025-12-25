@@ -1,0 +1,57 @@
+$ws-primary: #ffffff;
+$ws-surface: rgba(0, 0, 0, 0.6);
+
+.ws-container {
+  background-color: $ws-surface;
+  padding: 3px 4px;
+  border-radius: 4px;
+
+  .ws-wrapper {
+    padding: 1px 0;
+
+    &.occupied {
+      padding: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-top: 1px solid $ws-primary;
+      border-bottom: 1px solid $ws-primary;
+
+      &.group-start {
+        border-left: 1px solid $ws-primary;
+        border-top-left-radius: 1rem;
+        border-bottom-left-radius: 1rem;
+      }
+
+      &.group-end {
+        border-right: 1px solid $ws-primary;
+        border-top-right-radius: 1rem;
+        border-bottom-right-radius: 1rem;
+      }
+    }
+  }
+
+  button.ws-button {
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: transparent;
+    min-width: 0;
+    min-height: 0;
+
+    &.focused .ws-button-label {
+      background-color: $ws-primary;
+      color: black;
+      border-radius: 1rem;
+    }
+
+    &:hover:not(.focused) .ws-button-label {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 1rem;
+    }
+
+    .ws-button-label {
+      min-width: 1.2rem;
+      min-height: 1.2rem;
+      padding: 2px 6px;
+    }
+  }
+}
