@@ -12,19 +12,8 @@ window.TopBar {
       background: rgba(0, 0, 0, 0.6);
       padding: 1px 3px;
       margin: 0;
+      border-radius: 0 0 4px 4px;
     }
-  }
-
-  > centerbox > box[type=start] {
-    border-radius: 0 0 4px 0;
-  }
-
-  > centerbox > box[type=center] {
-    border-radius: 0 0 4px 4px;
-  }
-
-  > centerbox > box[type=end] {
-    border-radius: 0 0 0 4px;
   }
 
   button {
