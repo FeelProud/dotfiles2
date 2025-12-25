@@ -2,7 +2,7 @@ $ws-primary: #ffffff;
 $ws-surface: rgba(0, 0, 0, 0.6);
 
 .ws-container {
-  background-color: $ws-surface;
+  background-color: transparent;
   padding: 3px 4px;
   border-radius: 4px;
 
@@ -11,7 +11,7 @@ $ws-surface: rgba(0, 0, 0, 0.6);
 
     &.occupied {
       padding: 0;
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: transparent;
       border-top: 1px solid $ws-primary;
       border-bottom: 1px solid $ws-primary;
 
@@ -44,14 +44,14 @@ $ws-surface: rgba(0, 0, 0, 0.6);
     }
 
     &:hover:not(.focused) .ws-button-label {
-      background: rgba(255, 255, 255, 0.2);
       border-radius: 1rem;
     }
 
     .ws-button-label {
-      min-width: 1.2rem;
-      min-height: 1.2rem;
+      min-width: 1rem;
+      min-height: 1rem;
       padding: 2px 6px;
+      font-size: 1em;
     }
   }
 }

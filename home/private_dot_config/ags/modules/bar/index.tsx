@@ -3,9 +3,9 @@ import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { execAsync } from "ags/process"
 import { createPoll } from "ags/time"
 import { Workspaces } from "../workspaces"
+import { ArchLogo } from "../archlogo"
 import { SystemTray } from "../systemtray"
 import { PowerButton } from "../powermenu"
-import { Updates } from "../updates"
 import { Clock } from "../clock"
 import { Battery } from "../battery"
 import { Wifi } from "../wifi"
@@ -26,6 +26,7 @@ export function TopBar(gdkmonitor: Gdk.Monitor) {
     >
       <centerbox cssName="centerbox">
         <box $type="start" halign={Gtk.Align.START} spacing={4}>
+          <ArchLogo />
           <Workspaces />
         </box>
         <box $type="center" halign={Gtk.Align.CENTER}>
@@ -33,7 +34,6 @@ export function TopBar(gdkmonitor: Gdk.Monitor) {
         </box>
         <box $type="end" halign={Gtk.Align.END} spacing={4}>
           <SystemTray />
-          <Updates />
           <Wifi />
           <Bluetooth />
           <Battery />

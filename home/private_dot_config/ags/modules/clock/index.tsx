@@ -2,7 +2,7 @@ import { Gtk } from "ags/gtk4"
 import { createPoll } from "ags/time"
 
 export function Clock() {
-  const time = createPoll("", 1000, "date")
+  const time = createPoll("", 1000, "date +'%a %d %b • %I:%M %p'")
 
   return (
     <menubutton hexpand={false} halign={Gtk.Align.CENTER}>
