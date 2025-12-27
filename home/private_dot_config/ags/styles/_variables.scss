@@ -1,3 +1,22 @@
 // https://gitlab.gnome.org/GNOME/gtk/-/blob/gtk-3-24/gtk/theme/Adwaita/_colors-public.scss
 $fg-color: #{"@theme_fg_color"};
 $bg-color: #{"@theme_bg_color"};
+
+// Popup styling variables
+$popup-bg: rgba(30, 30, 30, 0.65);
+$popup-bg-solid: rgba(40, 40, 40, 0.85);
+$popup-border: rgba(255, 255, 255, 0.08);
+$popup-border-radius: 16px;
+$popup-padding: 12px;
+$popup-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+
+// Text colors
+$text-primary: rgba(255, 255, 255, 0.95);
+$text-secondary: rgba(255, 255, 255, 0.7);
+$text-muted: rgba(255, 255, 255, 0.5);
+
+// Interactive elements
+$hover-bg: rgba(255, 255, 255, 0.1);
+$active-bg: rgba(255, 255, 255, 0.15);
+$accent-color: rgba(255, 255, 255, 0.9);
+$separator-color: rgba(255, 255, 255, 0.1);

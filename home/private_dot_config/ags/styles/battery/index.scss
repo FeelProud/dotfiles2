@@ -1,52 +1,118 @@
+@use "../variables" as *;
+
 .battery-widget {
   padding: 4px 8px;
   font-size: 0.5em;
 }
 
 .battery-menu {
-  background: rgba(0, 0, 0, 0.9);
-  padding: 6px;
-  min-width: 200px;
-}
-
-.battery-status {
-  padding: 8px;
-  margin-bottom: 4px;
-}
-
-.battery-status > label {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.current-profile {
-  font-size: 12px;
-  opacity: 0.8;
-  padding: 8px;
-}
-
-.profile-separator {
-  min-height: 1px;
-  background: rgba(255, 255, 255, 0.2);
-  margin: 4px 0;
+  min-width: 240px;
+  padding: 12px;
 }
 
 .separator {
   min-height: 1px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 3px 0;
+  background: $separator-color;
+  margin: 8px 0;
 }
 
-.profile-buttons > button {
-  padding: 6px 12px;
-  margin: 2px 0;
+// Time remaining section
+.time-section {
+  padding: 8px 4px;
 }
 
-.profile-buttons > button:hover {
-  background: rgba(255, 255, 255, 0.2);
+.time-label {
+  font-size: 12px;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.profile-buttons > button.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-left: 3px solid rgba(255, 255, 255, 0.6);
+.time-display {
+  padding: 8px 0;
+}
+
+.time-unit {
+  min-width: 48px;
+}
+
+.time-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.time-separator {
+  font-size: 28px;
+  font-weight: 300;
+  color: $text-muted;
+  margin-top: -4px;
+}
+
+.time-unit-label {
+  font-size: 10px;
+  color: $text-muted;
+  text-transform: uppercase;
+}
+
+// Profile slider section
+.profile-section {
+  padding: 8px 4px;
+}
+
+.profile-header {
+  margin-bottom: 4px;
+}
+
+.profile-header image {
+  color: $text-primary;
+}
+
+.profile-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-primary;
+}
+
+.slider-container {
+  padding: 4px 0;
+}
+
+.profile-slider {
+  min-height: 24px;
+
+  trough {
+    min-height: 6px;
+    border-radius: 3px;
+    background: $hover-bg;
+  }
+
+  highlight {
+    min-height: 6px;
+    border-radius: 3px;
+    background: $accent-color;
+  }
+
+  slider {
+    min-width: 18px;
+    min-height: 18px;
+    border-radius: 50%;
+    background: $text-primary;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.slider-labels {
+  padding-top: 4px;
+
+  label {
+    font-size: 10px;
+    color: $text-muted;
+    transition: color 150ms ease;
+
+    &.active {
+      color: $text-primary;
+      font-weight: 500;
+    }
+  }
 }

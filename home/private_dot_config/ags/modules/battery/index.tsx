@@ -1,14 +1,18 @@
 import { Gtk } from "ags/gtk4"
+import { Astal } from "ags/gtk4"
 import { Accessor } from "ags"
 import AstalBattery from "gi://AstalBattery?version=0.1"
 import PowerProfiles from "gi://AstalPowerProfiles"
+import { PopupWindow, PopupButton } from "../popup"
 
 type PowerProfile = "performance" | "balanced" | "power-saver"
 
+const PROFILES: PowerProfile[] = ["power-saver", "balanced", "performance"]
+
 const PROFILE_ICONS: Record<PowerProfile, string> = {
-  "performance": "⚡",
-  "balanced": "⚖",
-  "power-saver": "🌿"
+  "performance": "power-profile-performance-symbolic",
+  "balanced": "power-profile-balanced-symbolic",
+  "power-saver": "power-profile-power-saver-symbolic"
 }
 
 const PROFILE_LABELS: Record<PowerProfile, string> = {
@@ -17,11 +21,11 @@ const PROFILE_LABELS: Record<PowerProfile, string> = {
   "power-saver": "Power Saver"
 }
 
+const POPUP_NAME = "battery-popup"
+
 export function Battery() {
   const battery = AstalBattery.get_default()
-  const powerProfiles = PowerProfiles.get_default()
 
-  // 1. Percentage
   const percentage = new Accessor(
     () => `${Math.round(battery.percentage * 100)}%`,
     (callback) => {
@@ -30,7 +34,6 @@ export function Battery() {
     }
   )
 
-  // 2. Icon Name (Ensure this is named correctly)
   const batteryIcon = new Accessor(
     () => battery.batteryIconName,
     (callback) => {
@@ -39,7 +42,20 @@ export function Battery() {
     }
   )
 
-  // 3. Power Profile
+  return (
+    <PopupButton popupName={POPUP_NAME} cssClasses={["battery-widget"]}>
+      <box spacing={4}>
+        <Gtk.Image iconName={batteryIcon.as(i => i || "battery-missing-symbolic")} />
+        <label label={percentage.as(p => p)} />
+      </box>
+    </PopupButton>
+  )
+}
+
+export function BatteryPopup() {
+  const battery = AstalBattery.get_default()
+  const powerProfiles = PowerProfiles.get_default()
+
   const currentProfile = new Accessor(
     () => powerProfiles.activeProfile as PowerProfile,
     (callback) => {
@@ -48,14 +64,13 @@ export function Battery() {
     }
   )
 
-  const formatTime = (seconds: number): string => {
-    if (!isFinite(seconds) || isNaN(seconds) || seconds <= 0) return null as unknown as string
+  const formatTime = (seconds: number): { hours: number; minutes: number } | null => {
+    if (!isFinite(seconds) || isNaN(seconds) || seconds <= 0) return null
     const hours = Math.floor(seconds / 3600)
     const minutes = Math.floor((seconds % 3600) / 60)
-    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`
+    return { hours, minutes }
   }
 
-  // Calculate estimated time to full using energy rate when UPower doesn't provide it
   const estimateTimeToFull = (): number => {
     const rate = Math.abs(battery.energyRate)
     if (rate <= 0) return 0
@@ -65,18 +80,31 @@ export function Battery() {
     return (energyNeeded / rate) * 3600
   }
 
-  // 4. Time Remaining (Robust logic)
-  const timeRemaining = new Accessor(
+  type TimeInfo = {
+    status: "full" | "charging" | "discharging" | "calculating"
+    hours?: number
+    minutes?: number
+  }
+
+  const timeRemaining = new Accessor<TimeInfo>(
     () => {
-      if (battery.percentage >= 0.98 && battery.charging) return "Fully Charged"
+      if (battery.percentage >= 0.98 && battery.charging) {
+        return { status: "full" }
+      }
       if (battery.charging) {
         let time = battery.timeToFull
         if (!time || time <= 0) time = estimateTimeToFull()
         const formatted = formatTime(time)
-        return formatted ? `Full in: ${formatted}` : "Full in: Calculating..."
+        if (formatted) {
+          return { status: "charging", hours: formatted.hours, minutes: formatted.minutes }
+        }
+        return { status: "calculating" }
       }
       const formatted = formatTime(battery.timeToEmpty)
-      return formatted ? `Remaining: ${formatted}` : "Remaining: Calculating..."
+      if (formatted) {
+        return { status: "discharging", hours: formatted.hours, minutes: formatted.minutes }
+      }
+      return { status: "calculating" }
     },
     (callback) => {
       const ids = [
@@ -94,46 +122,97 @@ export function Battery() {
     powerProfiles.activeProfile = profile
   }
 
+  const profileToIndex = (profile: PowerProfile): number => PROFILES.indexOf(profile)
+  const indexToProfile = (index: number): PowerProfile => PROFILES[Math.round(index)] || "balanced"
+
+  const onSliderChange = (scale: Gtk.Scale) => {
+    const value = scale.get_value()
+    const profile = indexToProfile(value)
+    setProfile(profile)
+  }
+
   return (
-    <menubutton cssClasses={["battery-widget"]}>
-      <box spacing={4}>
-        {/* Changed iconName to batteryIcon to ensure no conflicts */}
-        <Gtk.Image iconName={batteryIcon.as(i => i || "battery-missing-symbolic")} />
-        <label label={percentage.as(p => p)} />
-      </box>
-      <popover>
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={6} cssClasses={["battery-menu"]}>
-          {/* Battery Status Section */}
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["battery-status"]}>
-            <label label={percentage.as(p => `Battery: ${p}`)} />
-            <label label={timeRemaining.as(t => t)} />
+    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}>
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["battery-menu"]}>
+        {/* Time Remaining Section */}
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["time-section"]}>
+          <label
+            cssClasses={["time-label"]}
+            label={timeRemaining.as(t => {
+              if (t.status === "full") return "Fully Charged"
+              if (t.status === "calculating") return "Calculating..."
+              return t.status === "charging" ? "Until full" : "Remaining"
+            })}
+          />
+          <box cssClasses={["time-display"]} halign={Gtk.Align.CENTER} spacing={12}>
+            <box orientation={Gtk.Orientation.VERTICAL} cssClasses={["time-unit"]}>
+              <label
+                cssClasses={["time-value"]}
+                label={timeRemaining.as(t => {
+                  if (t.status === "full" || t.status === "calculating") return "--"
+                  return String(t.hours ?? 0)
+                })}
+              />
+              <label cssClasses={["time-unit-label"]} label="hours" />
+            </box>
+            <label cssClasses={["time-separator"]} label=":" />
+            <box orientation={Gtk.Orientation.VERTICAL} cssClasses={["time-unit"]}>
+              <label
+                cssClasses={["time-value"]}
+                label={timeRemaining.as(t => {
+                  if (t.status === "full" || t.status === "calculating") return "--"
+                  return String(t.minutes ?? 0).padStart(2, "0")
+                })}
+              />
+              <label cssClasses={["time-unit-label"]} label="min" />
+            </box>
           </box>
+        </box>
 
-          <box cssClasses={["separator"]} />
+        <box cssClasses={["separator"]} />
 
-          {/* Current Profile Section */}
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["current-profile"]}>
-            <label label={currentProfile.as(p => `Mode: ${PROFILE_LABELS[p]}`)} />
+        {/* Power Profile Slider Section */}
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["profile-section"]}>
+          <box cssClasses={["profile-header"]} spacing={8}>
+            <Gtk.Image iconName={currentProfile.as(p => PROFILE_ICONS[p])} pixelSize={20} />
+            <label
+              cssClasses={["profile-label"]}
+              label={currentProfile.as(p => PROFILE_LABELS[p])}
+            />
           </box>
-
-          <box cssClasses={["separator"]} />
-
-          {/* Power Profile Buttons Section */}
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["profile-buttons"]}>
-            {(["performance", "balanced", "power-saver"] as PowerProfile[]).map((profile) => (
-              <button
-                onClicked={() => setProfile(profile)}
+          <box cssClasses={["slider-container"]}>
+            <Gtk.Scale
+              cssClasses={["profile-slider"]}
+              orientation={Gtk.Orientation.HORIZONTAL}
+              hexpand={true}
+              drawValue={false}
+              round_digits={0}
+              adjustment={
+                new Gtk.Adjustment({
+                  lower: 0,
+                  upper: 2,
+                  step_increment: 1,
+                  page_increment: 1,
+                  value: profileToIndex(powerProfiles.activeProfile as PowerProfile),
+                })
+              }
+              onValueChanged={onSliderChange}
+            />
+          </box>
+          <box cssClasses={["slider-labels"]} homogeneous={true}>
+            {PROFILES.map((profile) => (
+              <label
+                label={PROFILE_LABELS[profile]}
                 cssClasses={currentProfile.as(p => p === profile ? ["active"] : [])}
-              >
-                <box spacing={6}>
-                  <label label={PROFILE_ICONS[profile]} />
-                  <label label={PROFILE_LABELS[profile]} />
-                </box>
-              </button>
+                halign={
+                  profile === "power-saver" ? Gtk.Align.START :
+                  profile === "performance" ? Gtk.Align.END : Gtk.Align.CENTER
+                }
+              />
             ))}
           </box>
         </box>
-      </popover>
-    </menubutton>
+      </box>
+    </PopupWindow>
   )
 }

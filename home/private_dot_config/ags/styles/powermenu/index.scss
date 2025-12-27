@@ -1,17 +1,26 @@
+@use "../variables" as *;
+
 .power-button {
   padding: 4px 8px;
+}
 
-  .power-menu {
-    background: rgba(0, 0, 0, 0.9);
-    padding: 8px;
+.power-menu {
+  min-width: 180px;
 
-    .power-option {
-      padding: 8px 16px;
-      margin: 2px 0;
+  .power-option {
+    padding: 10px 16px;
+    margin: 2px 0;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    transition: all 150ms ease;
 
-      &:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
+    &:hover {
+      background: $hover-bg;
+    }
+
+    &:active {
+      background: $active-bg;
     }
   }
 }

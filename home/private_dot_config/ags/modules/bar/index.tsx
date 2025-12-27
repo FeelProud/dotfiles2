@@ -11,13 +11,13 @@ import { Battery } from "../battery"
 import { Wifi } from "../wifi"
 import { Bluetooth } from "../bluetooth"
 
-export function TopBar(gdkmonitor: Gdk.Monitor) {
+export function TopBar(gdkmonitor: Gdk.Monitor, index: number) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
 
   return (
     <window
       visible
-      name="top-bar"
+      name={`top-bar-${index}`}
       class="TopBar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}
@@ -44,7 +44,7 @@ export function TopBar(gdkmonitor: Gdk.Monitor) {
   )
 }
 
-export function BottomBar(gdkmonitor: Gdk.Monitor) {
+export function BottomBar(gdkmonitor: Gdk.Monitor, index: number) {
   const remoteIp = createPoll("Fetching...", 60000, async () => {
     try {
       const response = await execAsync("curl -s https://api.ipify.org")
@@ -58,7 +58,7 @@ export function BottomBar(gdkmonitor: Gdk.Monitor) {
   return (
     <window
       visible
-      name="bottom-bar"
+      name={`bottom-bar-${index}`}
       class="BottomBar"
       gdkmonitor={gdkmonitor}
       exclusivity={Astal.Exclusivity.EXCLUSIVE}

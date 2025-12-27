@@ -1,0 +1,293 @@
+@use "../variables" as *;
+
+// Popup window styling (layer-shell windows with blur)
+.popup-window {
+  background: transparent;
+
+  .popup-content-wrapper {
+    background: $popup-bg;
+    border: 1px solid $popup-border;
+    border-radius: $popup-border-radius;
+    padding: $popup-padding;
+    color: $text-primary;
+    box-shadow: $popup-shadow;
+  }
+}
+
+// Popup trigger button styling
+.popup-trigger {
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 200ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active,
+  &:checked {
+    background: $active-bg;
+  }
+}
+
+// Global popover styling - transparent with blur effect
+// Note: Blur is handled by your compositor (Hyprland/Sway)
+// Make sure you have blur rules for GTK4 layer-shell popovers
+
+popover,
+popover.background {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  > contents,
+  contents {
+    background: $popup-bg;
+    border: 1px solid $popup-border;
+    border-radius: $popup-border-radius;
+    padding: 8px;
+    margin-top: 8px;
+    color: $text-primary;
+  }
+
+  // Arrow styling (hide)
+  > arrow,
+  arrow {
+    all: unset;
+    background: transparent;
+    border: none;
+    min-width: 0;
+    min-height: 0;
+    opacity: 0;
+  }
+}
+
+// Global separator styling
+.separator {
+  min-height: 1px;
+  background: $separator-color;
+  margin: 6px 0;
+}
+
+// Menubutton styling
+menubutton {
+  background: transparent;
+  border: none;
+
+  > button {
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background-color 200ms ease;
+
+    &:hover {
+      background: $hover-bg;
+    }
+
+    &:active,
+    &:checked {
+      background: $active-bg;
+    }
+  }
+}
+
+// Common popup content styling
+.popup-content {
+  min-width: 250px;
+}
+
+// Section headers in popups
+.popup-header {
+  font-size: 0.9em;
+  font-weight: bold;
+  color: $text-primary;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid $separator-color;
+}
+
+// Section titles (smaller)
+.popup-section-title {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 8px 0 4px 0;
+}
+
+// Separator lines
+.popup-separator {
+  min-height: 1px;
+  background: $separator-color;
+  margin: 8px 0;
+}
+
+// List items in popups
+.popup-item {
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &.active,
+  &:checked {
+    background: $active-bg;
+  }
+}
+
+// Buttons in popups
+.popup-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: $hover-bg;
+  border: 1px solid $popup-border;
+  color: $text-primary;
+  font-weight: 500;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: $active-bg;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// Sliders in popups
+.popup-slider {
+  scale {
+    min-height: 20px;
+    padding: 0;
+    margin: 4px 0;
+
+    trough {
+      min-height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+
+      highlight {
+        background: $accent-color;
+        border-radius: 3px;
+      }
+    }
+
+    slider {
+      min-width: 16px;
+      min-height: 16px;
+      border-radius: 50%;
+      background: $accent-color;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+  }
+}
+
+// Progress bars in popups
+.popup-progress {
+  progressbar {
+    min-height: 6px;
+
+    > trough {
+      min-height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.15);
+
+      > progress {
+        border-radius: 3px;
+        background: $accent-color;
+      }
+    }
+  }
+}
+
+// Icon styling in popups
+.popup-icon {
+  color: $text-secondary;
+  font-size: 1.2em;
+  margin-right: 8px;
+}
+
+// Labels
+.popup-label {
+  color: $text-primary;
+}
+
+.popup-label-secondary {
+  color: $text-secondary;
+  font-size: 0.9em;
+}
+
+.popup-label-muted {
+  color: $text-muted;
+  font-size: 0.85em;
+}
+
+// Checkmarks for selected items
+.popup-checkmark {
+  color: $accent-color;
+  font-size: 1em;
+  opacity: 0;
+  transition: opacity 150ms ease;
+
+  &.visible {
+    opacity: 1;
+  }
+}
+
+// Grid layouts in popups
+.popup-grid {
+  > * {
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 150ms ease;
+
+    &:hover {
+      background: $hover-bg;
+    }
+  }
+}
+
+// Toggle row styling (icon + label + switch)
+.popup-toggle-row {
+  padding: 6px 8px;
+  border-radius: 8px;
+  transition: background-color 150ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  switch {
+    min-width: 40px;
+    min-height: 20px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+
+    &:checked {
+      background: $accent-color;
+
+      > image {
+        background: rgba(0, 0, 0, 0.8);
+      }
+    }
+
+    > image {
+      min-width: 16px;
+      min-height: 16px;
+      border-radius: 50%;
+      background: white;
+      margin: 2px;
+    }
+  }
+}

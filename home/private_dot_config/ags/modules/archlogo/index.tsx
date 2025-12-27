@@ -1,11 +1,15 @@
 import { Gtk } from "ags/gtk4"
+import { Astal } from "ags/gtk4"
 import { createPoll } from "ags/time"
 import { readFile } from "ags/file"
 import Gio from "gi://Gio"
+import { PopupWindow, PopupButton } from "../popup"
 
 type MemoryUsage = { percentage: number; total: number; used: number }
 type DiskUsage = { percentage: number; total: number; used: number }
 type CpuTime = { total: number; idle: number }
+
+const POPUP_NAME = "archlogo-popup"
 
 let lastCpuStats: CpuTime = { total: 1, idle: 0 }
 
@@ -60,6 +64,14 @@ const formatBytes = (bytes: number): string => {
 }
 
 export function ArchLogo() {
+  return (
+    <PopupButton popupName={POPUP_NAME} cssClasses={["arch-logo-widget"]}>
+      <Gtk.Image file="/usr/share/pixmaps/archlinux-logo.svg" pixelSize={20} />
+    </PopupButton>
+  )
+}
+
+export function ArchLogoPopup() {
   const cpuUsage = createPoll("0%", 2000, () => `${getCpuUsage().toFixed(0)}%`)
 
   const memInfo = createPoll({ used: "0", total: "0", percent: "0%" }, 2000, () => {
@@ -81,53 +93,50 @@ export function ArchLogo() {
   })
 
   return (
-    <menubutton cssClasses={["arch-logo-widget"]}>
-      <Gtk.Image file="/usr/share/pixmaps/archlinux-logo.svg" pixelSize={20} />
-      <popover>
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["system-stats-menu"]}>
-          <label label="System Stats" cssClasses={["stats-header"]} />
+    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT}>
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["system-stats-menu"]}>
+        <label label="System Stats" cssClasses={["stats-header"]} />
 
-          <box cssClasses={["separator"]} />
+        <box cssClasses={["separator"]} />
 
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
-            <box spacing={8}>
-              <Gtk.Image iconName="cpu-symbolic" cssClasses={["stat-icon"]} />
-              <label label="CPU" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-              <label label={cpuUsage} cssClasses={["stat-value"]} />
-            </box>
-          </box>
-
-          <box cssClasses={["separator"]} />
-
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
-            <box spacing={8}>
-              <Gtk.Image iconName="memory-symbolic" cssClasses={["stat-icon"]} />
-              <label label="RAM" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-              <label label={memInfo.as(m => m.percent)} cssClasses={["stat-value"]} />
-            </box>
-            <label
-              label={memInfo.as(m => `${m.used} / ${m.total}`)}
-              cssClasses={["stat-detail"]}
-              halign={Gtk.Align.END}
-            />
-          </box>
-
-          <box cssClasses={["separator"]} />
-
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
-            <box spacing={8}>
-              <Gtk.Image iconName="drive-harddisk-symbolic" cssClasses={["stat-icon"]} />
-              <label label="Disk" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-              <label label={diskInfo.as(d => d.percent)} cssClasses={["stat-value"]} />
-            </box>
-            <label
-              label={diskInfo.as(d => `${d.used} / ${d.total}`)}
-              cssClasses={["stat-detail"]}
-              halign={Gtk.Align.END}
-            />
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
+          <box spacing={8}>
+            <Gtk.Image iconName="cpu-symbolic" cssClasses={["stat-icon"]} />
+            <label label="CPU" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
+            <label label={cpuUsage} cssClasses={["stat-value"]} />
           </box>
         </box>
-      </popover>
-    </menubutton>
+
+        <box cssClasses={["separator"]} />
+
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
+          <box spacing={8}>
+            <Gtk.Image iconName="memory-symbolic" cssClasses={["stat-icon"]} />
+            <label label="RAM" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
+            <label label={memInfo.as(m => m.percent)} cssClasses={["stat-value"]} />
+          </box>
+          <label
+            label={memInfo.as(m => `${m.used} / ${m.total}`)}
+            cssClasses={["stat-detail"]}
+            halign={Gtk.Align.END}
+          />
+        </box>
+
+        <box cssClasses={["separator"]} />
+
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
+          <box spacing={8}>
+            <Gtk.Image iconName="drive-harddisk-symbolic" cssClasses={["stat-icon"]} />
+            <label label="Disk" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
+            <label label={diskInfo.as(d => d.percent)} cssClasses={["stat-value"]} />
+          </box>
+          <label
+            label={diskInfo.as(d => `${d.used} / ${d.total}`)}
+            cssClasses={["stat-detail"]}
+            halign={Gtk.Align.END}
+          />
+        </box>
+      </box>
+    </PopupWindow>
   )
 }

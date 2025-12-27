@@ -1,6 +1,9 @@
 // Import global variables
 @use "styles/variables";
 
+// Import global popup styling (transparent/blur effect)
+@use "styles/popup";
+
 // Import module styles
 @use "styles/bar";
 @use "styles/workspaces";
