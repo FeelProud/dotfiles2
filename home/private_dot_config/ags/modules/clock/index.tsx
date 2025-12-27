@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Astal } from "ags/gtk4"
 import { createPoll } from "ags/time"
 import { PopupWindow, PopupButton } from "../popup"
 
@@ -17,7 +16,7 @@ export function Clock() {
 
 export function ClockPopup() {
   return (
-    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP}>
+    <PopupWindow name={POPUP_NAME} position="top-center">
       <box cssClasses={["clock-menu"]}>
         <Gtk.Calendar />
       </box>

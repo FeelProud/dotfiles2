@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Astal } from "ags/gtk4"
 import { execAsync } from "ags/process"
 import { PopupWindow, PopupButton } from "../popup"
 
@@ -17,7 +16,7 @@ export function PowerButton() {
 
 export function PowerPopup() {
   return (
-    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}>
+    <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["power-menu"]}>
         <button
           cssClasses={["power-option"]}

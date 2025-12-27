@@ -48,9 +48,11 @@ export function closeAllPopups() {
   popupStates.forEach(([, setVisible]) => setVisible(false))
 }
 
+type PopupPosition = "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right"
+
 interface PopupWindowProps {
   name: string
-  anchor?: Astal.WindowAnchor
+  position?: PopupPosition
   marginTop?: number
   marginRight?: number
   marginBottom?: number
@@ -60,7 +62,7 @@ interface PopupWindowProps {
 
 export function PopupWindow({
   name,
-  anchor = Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT,
+  position = "top-right",
   marginTop = 8,
   marginRight = 8,
   marginBottom = 8,
@@ -69,7 +71,7 @@ export function PopupWindow({
 }: PopupWindowProps) {
   const [visible] = getPopupState(name)
 
-  const setup = (win: Astal.Window) => {
+  const setup = (win: Gtk.Window) => {
     // Key controller for Escape
     const keyController = new Gtk.EventControllerKey()
     keyController.connect("key-pressed", (_ctrl, keyval) => {
@@ -82,23 +84,72 @@ export function PopupWindow({
     win.add_controller(keyController)
   }
 
+  // Click catcher button that closes the popup
+  const ClickCatcher = ({ hexpand = false, vexpand = false }: { hexpand?: boolean; vexpand?: boolean }) => (
+    <button
+      cssClasses={["popup-click-catcher"]}
+      hexpand={hexpand}
+      vexpand={vexpand}
+      onClicked={() => closePopup(name)}
+    />
+  )
+
+  // Determine layout based on position
+  const isTop = position.startsWith("top")
+  const isLeft = position.endsWith("left")
+  const isRight = position.endsWith("right")
+
+  // Vertical alignment for the popup content
+  const vAlign = isTop ? Gtk.Align.START : Gtk.Align.END
+  // Horizontal alignment for the popup content
+  const hAlign = isLeft ? Gtk.Align.START : isRight ? Gtk.Align.END : Gtk.Align.CENTER
+
   return (
     <window
       name={name}
-      cssClasses={["popup-window"]}
+      cssClasses={["popup-window-fullscreen"]}
       visible={visible}
-      anchor={anchor}
+      anchor={
+        Astal.WindowAnchor.TOP |
+        Astal.WindowAnchor.BOTTOM |
+        Astal.WindowAnchor.LEFT |
+        Astal.WindowAnchor.RIGHT
+      }
       exclusivity={Astal.Exclusivity.NORMAL}
       keymode={Astal.Keymode.ON_DEMAND}
-      margin_top={marginTop}
-      margin_right={marginRight}
-      margin_bottom={marginBottom}
-      margin_left={marginLeft}
+      layer={Astal.Layer.OVERLAY}
       application={app}
       $={setup}
     >
-      <box cssClasses={["popup-content-wrapper"]}>
-        {children}
+      <box orientation={Gtk.Orientation.HORIZONTAL} hexpand vexpand>
+        {/* Left click catcher (if popup is center or right) */}
+        {!isLeft && <ClickCatcher hexpand vexpand />}
+
+        {/* Middle column with vertical layout */}
+        <box orientation={Gtk.Orientation.VERTICAL} hexpand={false} vexpand>
+          {/* Top click catcher (if popup is at bottom) */}
+          {!isTop && <ClickCatcher hexpand vexpand />}
+
+          {/* The actual popup content */}
+          <box
+            orientation={Gtk.Orientation.VERTICAL}
+            valign={vAlign}
+            halign={hAlign}
+            cssClasses={["popup-content-wrapper"]}
+            marginTop={isTop ? marginTop : 0}
+            marginBottom={!isTop ? marginBottom : 0}
+            marginStart={isLeft ? marginLeft : 0}
+            marginEnd={isRight ? marginRight : 0}
+          >
+            {children}
+          </box>
+
+          {/* Bottom click catcher (if popup is at top) */}
+          {isTop && <ClickCatcher hexpand vexpand />}
+        </box>
+
+        {/* Right click catcher (if popup is center or left) */}
+        {!isRight && <ClickCatcher hexpand vexpand />}
       </box>
     </window>
   )

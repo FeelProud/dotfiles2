@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Astal } from "ags/gtk4"
 import { createPoll } from "ags/time"
 import { readFile } from "ags/file"
 import Gio from "gi://Gio"
@@ -93,7 +92,7 @@ export function ArchLogoPopup() {
   })
 
   return (
-    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.LEFT}>
+    <PopupWindow name={POPUP_NAME} position="top-left">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["system-stats-menu"]}>
         <label label="System Stats" cssClasses={["stats-header"]} />
 

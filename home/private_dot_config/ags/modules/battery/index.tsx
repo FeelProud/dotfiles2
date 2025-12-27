@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Astal } from "ags/gtk4"
 import { Accessor } from "ags"
 import AstalBattery from "gi://AstalBattery?version=0.1"
 import PowerProfiles from "gi://AstalPowerProfiles"
@@ -132,7 +131,7 @@ export function BatteryPopup() {
   }
 
   return (
-    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}>
+    <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["battery-menu"]}>
         {/* Time Remaining Section */}
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["time-section"]}>

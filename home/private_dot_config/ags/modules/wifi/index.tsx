@@ -1,5 +1,4 @@
 import { Gtk } from "ags/gtk4"
-import { Astal } from "ags/gtk4"
 import { Accessor } from "ags"
 import AstalNetwork from "gi://AstalNetwork?version=0.1"
 import { PopupWindow, PopupButton } from "../popup"
@@ -66,7 +65,7 @@ export function WifiPopup() {
   }
 
   return (
-    <PopupWindow name={POPUP_NAME} anchor={Astal.WindowAnchor.TOP | Astal.WindowAnchor.RIGHT}>
+    <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["wifi-menu"]}>
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4}>
           <label label={ssid.as(s => `Network: ${s}`)} />

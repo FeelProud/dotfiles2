@@ -1,6 +1,35 @@
 @use "../variables" as *;
 
-// Popup window styling (layer-shell windows with blur)
+// Fullscreen popup window (covers entire screen for click-outside-to-close)
+.popup-window-fullscreen {
+  background: transparent;
+
+  // Click catcher buttons - transparent areas that close popup on click
+  .popup-click-catcher {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    // Optionally add a subtle dark overlay to indicate modal state:
+    // background: rgba(0, 0, 0, 0.2);
+  }
+
+  // Popup content styling (same as legacy .popup-window)
+  .popup-content-wrapper {
+    background: $popup-bg;
+    border: 1px solid $popup-border;
+    border-radius: $popup-border-radius;
+    padding: $popup-padding;
+    color: $text-primary;
+    box-shadow: $popup-shadow;
+  }
+}
+
+// Popup window styling (layer-shell windows with blur) - legacy
 .popup-window {
   background: transparent;
 

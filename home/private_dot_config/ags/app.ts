@@ -25,7 +25,6 @@ app.start({
   main() {
     app.get_monitors().forEach((monitor, index) => TopBar(monitor, index))
     app.get_monitors().forEach((monitor, index) => BottomBar(monitor, index))
-    // PopupClickCatcher() // Disabled - layer-shell windows can't catch clicks over apps
     ArchLogoPopup()
     BatteryPopup()
     BluetoothPopup()
