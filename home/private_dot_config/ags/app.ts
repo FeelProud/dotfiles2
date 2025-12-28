@@ -7,6 +7,7 @@ import { BluetoothPopup } from "./modules/bluetooth"
 import { WifiPopup } from "./modules/wifi"
 import { PowerPopup } from "./modules/powermenu"
 import { ClockPopup } from "./modules/clock"
+import { SettingsPopup } from "./modules/settings"
 
 app.start({
   css: style,
@@ -31,5 +32,6 @@ app.start({
     WifiPopup()
     PowerPopup()
     ClockPopup()
+    SettingsPopup()
   },
 })

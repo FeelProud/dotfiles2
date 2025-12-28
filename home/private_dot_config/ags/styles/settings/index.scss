@@ -1,0 +1,191 @@
+@use "../variables" as *;
+
+$speaker-color: #9b7dd4;
+$mic-color: #9b7dd4;
+
+.settings-widget {
+  padding: 4px 8px;
+}
+
+.settings-menu {
+  min-width: 320px;
+  padding: 16px;
+}
+
+.settings-section {
+  padding: 4px 0;
+}
+
+.section-title {
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+
+  image {
+    color: $text-secondary;
+  }
+}
+
+.section-title-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.settings-header {
+  margin-bottom: 8px;
+
+  image {
+    color: $text-primary;
+  }
+}
+
+.settings-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-primary;
+}
+
+.settings-value {
+  font-size: 13px;
+  font-weight: 400;
+  color: $text-secondary;
+  min-width: 40px;
+  text-align: right;
+}
+
+.icon-button {
+  padding: 4px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  min-width: 28px;
+  min-height: 28px;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  image {
+    color: $text-primary;
+  }
+}
+
+.audio-slider-row {
+  padding: 2px 0;
+}
+
+.slider-container {
+  padding: 0 4px;
+}
+
+.settings-slider {
+  min-height: 24px;
+
+  trough {
+    min-height: 6px;
+    border-radius: 3px;
+    background: $hover-bg;
+  }
+
+  highlight {
+    min-height: 6px;
+    border-radius: 3px;
+    background: $accent-color;
+  }
+
+  slider {
+    min-width: 18px;
+    min-height: 18px;
+    border-radius: 50%;
+    background: $text-primary;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  &.speaker-slider {
+    highlight {
+      background: $speaker-color;
+    }
+  }
+
+  &.mic-slider {
+    highlight {
+      background: $mic-color;
+    }
+  }
+}
+
+.separator {
+  min-height: 1px;
+  background: $separator-color;
+  margin: 4px 0;
+}
+
+// Device selector styles
+.device-selector {
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.selector-header {
+  padding: 4px 0;
+  margin-bottom: 4px;
+
+  image {
+    color: $text-secondary;
+  }
+}
+
+.selector-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: $text-secondary;
+}
+
+.selector-list {
+  padding: 0;
+}
+
+.selector-item {
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  &.selected {
+    background: rgba(155, 125, 212, 0.15);
+
+    label {
+      color: $text-primary;
+    }
+
+    image {
+      color: $speaker-color;
+    }
+  }
+
+  label {
+    font-size: 13px;
+    color: $text-secondary;
+  }
+
+  image {
+    color: $text-muted;
+  }
+}
