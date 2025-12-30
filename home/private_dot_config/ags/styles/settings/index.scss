@@ -1,7 +1,7 @@
 @use "../variables" as *;
 
-$speaker-color: #9b7dd4;
-$mic-color: #9b7dd4;
+$speaker-color: $accent-primary;
+$mic-color: $accent-primary;
 
 .settings-widget {
   padding: 4px 8px;
@@ -167,7 +167,7 @@ $mic-color: #9b7dd4;
   }
 
   &.selected {
-    background: rgba(155, 125, 212, 0.15);
+    background: rgba($speaker-color, 0.15);
 
     label {
       color: $text-primary;

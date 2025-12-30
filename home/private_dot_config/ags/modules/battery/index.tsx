@@ -22,6 +22,11 @@ const PROFILE_LABELS: Record<PowerProfile, string> = {
 
 const POPUP_NAME = "battery-popup"
 
+// Helper to check if performance mode should be blocked
+const shouldBlockPerformance = (battery: AstalBattery.Device): boolean => {
+  return !battery.charging && battery.percentage < 1.0
+}
+
 export function Battery() {
   const battery = AstalBattery.get_default()
 
@@ -144,8 +149,32 @@ export function BatteryPopup() {
   )
 
   const setProfile = (profile: PowerProfile) => {
+    // Block performance mode when on battery
+    if (profile === "performance" && shouldBlockPerformance(battery)) {
+      return
+    }
+
     powerProfiles.activeProfile = profile
+
+    // Verify the change was applied
+    setTimeout(() => {
+      if (powerProfiles.activeProfile !== profile) {
+        console.warn(`Failed to set power profile to ${profile}, current: ${powerProfiles.activeProfile}`)
+      }
+    }, 100)
   }
+
+  // Track whether performance mode is blocked
+  const performanceBlocked = new Accessor(
+    () => shouldBlockPerformance(battery),
+    (callback) => {
+      const ids = [
+        battery.connect("notify::charging", callback),
+        battery.connect("notify::percentage", callback),
+      ]
+      return () => ids.forEach(id => battery.disconnect(id))
+    }
+  )
 
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
@@ -191,17 +220,56 @@ export function BatteryPopup() {
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["profile-section"]}>
           <label cssClasses={["profile-title"]} label="Power Profile" halign={Gtk.Align.START} />
           <box cssClasses={["profile-buttons"]} homogeneous={true}>
-            {PROFILES.map((profile) => (
-              <button
-                cssClasses={currentProfile.as(p =>
-                  p === profile ? ["profile-btn", `profile-${profile}`, "active"] : ["profile-btn", `profile-${profile}`]
-                )}
-                onClicked={() => setProfile(profile)}
-                tooltipText={PROFILE_LABELS[profile]}
-              >
-                <Gtk.Image iconName={PROFILE_ICONS[profile]} pixelSize={16} />
-              </button>
-            ))}
+            {PROFILES.map((profile) => {
+              if (profile === "performance") {
+                // Performance button with blocking logic
+                const perfClasses = new Accessor(
+                  () => {
+                    const isActive = powerProfiles.activeProfile === profile
+                    const isBlocked = shouldBlockPerformance(battery)
+                    const classes = ["profile-btn", `profile-${profile}`]
+                    if (isActive) classes.push("active")
+                    if (isBlocked) classes.push("disabled")
+                    return classes
+                  },
+                  (callback) => {
+                    const ids = [
+                      powerProfiles.connect("notify::active-profile", callback),
+                      battery.connect("notify::charging", callback),
+                      battery.connect("notify::percentage", callback),
+                    ]
+                    return () => {
+                      powerProfiles.disconnect(ids[0])
+                      battery.disconnect(ids[1])
+                      battery.disconnect(ids[2])
+                    }
+                  }
+                )
+                return (
+                  <button
+                    cssClasses={perfClasses.as(c => c)}
+                    onClicked={() => setProfile(profile)}
+                    tooltipText={performanceBlocked.as(blocked =>
+                      blocked ? "Performance mode unavailable on battery" : PROFILE_LABELS[profile]
+                    )}
+                    sensitive={performanceBlocked.as(b => !b)}
+                  >
+                    <Gtk.Image iconName={PROFILE_ICONS[profile]} pixelSize={16} />
+                  </button>
+                )
+              }
+              return (
+                <button
+                  cssClasses={currentProfile.as(p =>
+                    p === profile ? ["profile-btn", `profile-${profile}`, "active"] : ["profile-btn", `profile-${profile}`]
+                  )}
+                  onClicked={() => setProfile(profile)}
+                  tooltipText={PROFILE_LABELS[profile]}
+                >
+                  <Gtk.Image iconName={PROFILE_ICONS[profile]} pixelSize={16} />
+                </button>
+              )
+            })}
           </box>
         </box>
       </box>

@@ -1,6 +1,6 @@
 @use "../variables" as *;
 
-$profile-color: #9b7dd4;
+$profile-color: $accent-primary;
 
 .battery-widget {
   padding: 4px 8px;
@@ -130,6 +130,20 @@ $profile-color: #9b7dd4;
 
     image {
       color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  // Disabled state (e.g., performance on battery)
+  &.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+
+    &:hover {
+      background: transparent;
+
+      image {
+        color: $text-muted;
+      }
     }
   }
 }

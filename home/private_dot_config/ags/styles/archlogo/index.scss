@@ -1,7 +1,38 @@
 @use "../variables" as *;
+@use "sass:color";
+
+$stats-color: $accent-primary;
+$stats-color-alt: $accent-secondary;
 
 .arch-logo-widget {
   padding: 4px 8px;
+}
+
+.stat-bar-bg {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  min-height: 12px;
+  min-width: 200px;
+  padding: 2px;
+  margin-top: 2px;
+}
+
+.stat-bar-fill {
+  border-radius: 4px;
+  min-height: 8px;
+  transition: min-width 300ms ease-out;
+}
+
+.cpu-bar {
+  background: $stats-color;
+}
+
+.ram-bar {
+  background: $stats-color;
+}
+
+.disk-bar {
+  background: $stats-color;
 }
 
 .system-stats-menu {

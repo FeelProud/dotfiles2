@@ -1,6 +1,6 @@
 @use "../variables" as *;
 
-$bt-color: #9b7dd4;
+$bt-color: $accent-primary;
 
 .bluetooth-widget {
   padding: 4px 8px;

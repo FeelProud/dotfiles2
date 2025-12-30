@@ -1,6 +1,6 @@
 @use "../variables" as *;
 
-$net-color: #9b7dd4;
+$net-color: $accent-primary;
 
 .network-widget {
   padding: 4px 8px;

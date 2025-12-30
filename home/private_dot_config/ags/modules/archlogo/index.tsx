@@ -71,23 +71,23 @@ export function ArchLogo() {
 }
 
 export function ArchLogoPopup() {
-  const cpuUsage = createPoll("0%", 2000, () => `${getCpuUsage().toFixed(0)}%`)
+  const cpuPercent = createPoll(0, 2000, getCpuUsage)
+  const memPercent = createPoll(0, 2000, () => getMemoryUsage().percentage)
+  const diskPercent = createPoll(0, 10000, () => getDiskUsage().percentage)
 
-  const memInfo = createPoll({ used: "0", total: "0", percent: "0%" }, 2000, () => {
+  const memInfo = createPoll({ used: "0", total: "0" }, 2000, () => {
     const mem = getMemoryUsage()
     return {
       used: formatBytes(mem.used),
       total: formatBytes(mem.total),
-      percent: `${mem.percentage.toFixed(0)}%`
     }
   })
 
-  const diskInfo = createPoll({ used: "0", total: "0", percent: "0%" }, 10000, () => {
+  const diskInfo = createPoll({ used: "0", total: "0" }, 10000, () => {
     const disk = getDiskUsage()
     return {
       used: formatBytes(disk.used),
       total: formatBytes(disk.total),
-      percent: `${disk.percentage.toFixed(0)}%`
     }
   })
 
@@ -102,9 +102,14 @@ export function ArchLogoPopup() {
           <box spacing={8}>
             <Gtk.Image iconName="preferences-system-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="CPU" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-            <label label={cpuUsage} cssClasses={["stat-value"]} />
+            <label label={cpuPercent.as(p => `${p.toFixed(0)}%`)} cssClasses={["stat-value"]} />
           </box>
-          <box cssClasses={["stat-detail-spacer"]} />
+          <box cssClasses={["stat-bar-bg"]}>
+            <box
+              cssClasses={["stat-bar-fill", "cpu-bar"]}
+              css={cpuPercent.as(p => `min-width: ${Math.round(Math.max(2, p * 2))}px;`)}
+            />
+          </box>
         </box>
 
         <box cssClasses={["separator"]} />
@@ -113,7 +118,13 @@ export function ArchLogoPopup() {
           <box spacing={8}>
             <Gtk.Image iconName="drive-harddisk-solidstate-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="RAM" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-            <label label={memInfo.as(m => m.percent)} cssClasses={["stat-value"]} />
+            <label label={memPercent.as(p => `${p.toFixed(0)}%`)} cssClasses={["stat-value"]} />
+          </box>
+          <box cssClasses={["stat-bar-bg"]}>
+            <box
+              cssClasses={["stat-bar-fill", "ram-bar"]}
+              css={memPercent.as(p => `min-width: ${Math.round(Math.max(2, p * 2))}px;`)}
+            />
           </box>
           <label
             label={memInfo.as(m => `${m.used} / ${m.total}`)}
@@ -128,7 +139,13 @@ export function ArchLogoPopup() {
           <box spacing={8}>
             <Gtk.Image iconName="drive-harddisk-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="Disk" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
-            <label label={diskInfo.as(d => d.percent)} cssClasses={["stat-value"]} />
+            <label label={diskPercent.as(p => `${p.toFixed(0)}%`)} cssClasses={["stat-value"]} />
+          </box>
+          <box cssClasses={["stat-bar-bg"]}>
+            <box
+              cssClasses={["stat-bar-fill", "disk-bar"]}
+              css={diskPercent.as(p => `min-width: ${Math.round(Math.max(2, p * 2))}px;`)}
+            />
           </box>
           <label
             label={diskInfo.as(d => `${d.used} / ${d.total}`)}
