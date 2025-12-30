@@ -6,8 +6,25 @@ import Wp from "gi://AstalWp"
 
 const POPUP_NAME = "settings-popup"
 
-// Audio setup
-const audio = Wp.get_default()?.audio
+// Audio setup with proper async initialization
+const wp = Wp.get_default()
+const audio = wp?.audio
+
+// Track ready state for async initialization
+let isAudioReady = false
+const audioReadyCallbacks: Set<() => void> = new Set()
+
+if (wp) {
+  if (wp.audio?.defaultSpeaker) {
+    // Already initialized
+    isAudioReady = true
+  }
+  wp.connect("ready", () => {
+    isAudioReady = true
+    audioReadyCallbacks.forEach((cb) => cb())
+    audioReadyCallbacks.clear()
+  })
+}
 
 // Brightness state - reactive using udevadm monitor for instant updates
 const getBrightness = async (): Promise<number> => {
@@ -69,24 +86,46 @@ const setBrightness = async (percent: number) => {
   }, 200)
 }
 
-// Create reactive accessor for speakers list
+// Create reactive accessor for speakers list with ready state and lifecycle signals
 const speakersAccessor = audio
   ? new Accessor(
-      () => audio.speakers || [],
+      () => (isAudioReady ? audio.speakers || [] : []),
       (callback) => {
-        const id = audio.connect("notify::speakers", callback)
-        return () => audio.disconnect(id)
+        const addedId = audio.connect("speaker-added", callback)
+        const removedId = audio.connect("speaker-removed", callback)
+
+        // Trigger callback when audio becomes ready
+        if (!isAudioReady) {
+          audioReadyCallbacks.add(callback)
+        }
+
+        return () => {
+          audio.disconnect(addedId)
+          audio.disconnect(removedId)
+          audioReadyCallbacks.delete(callback)
+        }
       }
     )
   : new Accessor(() => [] as Wp.Endpoint[], () => () => {})
 
-// Create reactive accessor for microphones list
+// Create reactive accessor for microphones list with ready state and lifecycle signals
 const microphonesAccessor = audio
   ? new Accessor(
-      () => audio.microphones || [],
+      () => (isAudioReady ? audio.microphones || [] : []),
       (callback) => {
-        const id = audio.connect("notify::microphones", callback)
-        return () => audio.disconnect(id)
+        const addedId = audio.connect("microphone-added", callback)
+        const removedId = audio.connect("microphone-removed", callback)
+
+        // Trigger callback when audio becomes ready
+        if (!isAudioReady) {
+          audioReadyCallbacks.add(callback)
+        }
+
+        return () => {
+          audio.disconnect(addedId)
+          audio.disconnect(removedId)
+          audioReadyCallbacks.delete(callback)
+        }
       }
     )
   : new Accessor(() => [] as Wp.Endpoint[], () => () => {})
@@ -95,7 +134,7 @@ export function Settings() {
   return (
     <PopupButton popupName={POPUP_NAME} cssClasses={["settings-widget"]}>
       <box spacing={4}>
-        <Gtk.Image iconName="emblem-system-symbolic" />
+        <label label="settings" cssClasses={["bar-icon"]} />
       </box>
     </PopupButton>
   )
@@ -105,34 +144,71 @@ export function Settings() {
 function DeviceItem({
   endpoint,
   icon,
+  type,
 }: {
   endpoint: Wp.Endpoint
   icon: string
+  type: "speaker" | "microphone"
 }) {
-  const isDefault = new Accessor(
-    () => endpoint.isDefault,
-    (callback) => {
-      const id = endpoint.connect("notify::is-default", callback)
-      return () => endpoint.disconnect(id)
-    }
-  )
+  // Use the endpoint's own isDefault property directly
+  const checkIsDefault = () => endpoint.isDefault
 
   return (
     <button
-      cssClasses={isDefault.as((d) => d ? ["selector-item", "selected"] : ["selector-item"])}
-      onClicked={() => endpoint.isDefault = true}
+      cssClasses={["selector-item"]}
+      onClicked={() => (endpoint.isDefault = true)}
+      $={(btn: Gtk.Button) => {
+        const update = () => {
+          if (checkIsDefault()) {
+            btn.add_css_class("selected")
+          } else {
+            btn.remove_css_class("selected")
+          }
+        }
+
+        // Initial update
+        update()
+
+        // Listen to this endpoint's is-default property
+        const endpointId = endpoint.connect("notify::is-default", update)
+
+        // Also listen to global default changes
+        const globalSignal = type === "speaker" ? "notify::default-speaker" : "notify::default-microphone"
+        const globalId = audio?.connect(globalSignal, update)
+
+        btn.connect("destroy", () => {
+          endpoint.disconnect(endpointId)
+          if (globalId && audio) audio.disconnect(globalId)
+        })
+      }}
     >
-      <box spacing={8}>
-        <Gtk.Image iconName={icon} pixelSize={14} />
+      <box spacing={6}>
+        <Gtk.Image iconName={icon} pixelSize={12} />
         <label
           label={endpoint.description || endpoint.name || "Unknown"}
           hexpand
           halign={Gtk.Align.START}
           ellipsize={3}
         />
-        {isDefault.as((d) =>
-          d ? <Gtk.Image iconName="object-select-symbolic" pixelSize={14} /> : <box />
-        )()}
+        <Gtk.Image
+          iconName="object-select-symbolic"
+          pixelSize={12}
+          $={(img: Gtk.Image) => {
+            const update = () => {
+              img.visible = checkIsDefault()
+            }
+            update()
+
+            const endpointId = endpoint.connect("notify::is-default", update)
+            const globalSignal = type === "speaker" ? "notify::default-speaker" : "notify::default-microphone"
+            const globalId = audio?.connect(globalSignal, update)
+
+            img.connect("destroy", () => {
+              endpoint.disconnect(endpointId)
+              if (globalId && audio) audio.disconnect(globalId)
+            })
+          }}
+        />
       </box>
     </button>
   )
@@ -143,20 +219,22 @@ function DeviceSelector({
   label,
   icon,
   endpoints,
+  type,
 }: {
   label: string
   icon: string
   endpoints: Accessor<Wp.Endpoint[]>
+  type: "speaker" | "microphone"
 }) {
   return (
-    <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["device-selector"]}>
-      <box cssClasses={["selector-header"]} spacing={8}>
-        <Gtk.Image iconName={icon} pixelSize={16} />
+    <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["device-selector"]}>
+      <box cssClasses={["selector-header"]} spacing={6}>
+        <Gtk.Image iconName={icon} pixelSize={14} />
         <label cssClasses={["selector-label"]} label={label} />
       </box>
-      <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["selector-list"]}>
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={1} cssClasses={["selector-list"]}>
         <For each={endpoints}>
-          {(endpoint) => <DeviceItem endpoint={endpoint} icon={icon} />}
+          {(endpoint) => <DeviceItem endpoint={endpoint} icon={icon} type={type} />}
         </For>
       </box>
     </box>
@@ -170,7 +248,6 @@ export function SettingsPopup() {
         () => Math.round((audio.defaultSpeaker?.volume || 0) * 100),
         (callback) => {
           const speakerId = audio.connect("notify::default-speaker", callback)
-          // Also need to listen to volume changes on the current speaker
           let volumeId: number | null = null
           let currentSpeaker: Wp.Endpoint | null = null
 
@@ -183,7 +260,17 @@ export function SettingsPopup() {
               volumeId = currentSpeaker.connect("notify::volume", callback)
             }
           }
-          updateVolumeListener()
+
+          // Handle async initialization
+          if (isAudioReady) {
+            updateVolumeListener()
+          } else {
+            audioReadyCallbacks.add(() => {
+              updateVolumeListener()
+              callback()
+            })
+          }
+
           const speakerChangeId = audio.connect("notify::default-speaker", updateVolumeListener)
 
           return () => {
@@ -215,7 +302,17 @@ export function SettingsPopup() {
               muteId = currentSpeaker.connect("notify::mute", callback)
             }
           }
-          updateMuteListener()
+
+          // Handle async initialization
+          if (isAudioReady) {
+            updateMuteListener()
+          } else {
+            audioReadyCallbacks.add(() => {
+              updateMuteListener()
+              callback()
+            })
+          }
+
           const speakerChangeId = audio.connect("notify::default-speaker", updateMuteListener)
 
           return () => {
@@ -247,7 +344,17 @@ export function SettingsPopup() {
               volumeId = currentMic.connect("notify::volume", callback)
             }
           }
-          updateVolumeListener()
+
+          // Handle async initialization
+          if (isAudioReady) {
+            updateVolumeListener()
+          } else {
+            audioReadyCallbacks.add(() => {
+              updateVolumeListener()
+              callback()
+            })
+          }
+
           const micChangeId = audio.connect("notify::default-microphone", updateVolumeListener)
 
           return () => {
@@ -279,7 +386,17 @@ export function SettingsPopup() {
               muteId = currentMic.connect("notify::mute", callback)
             }
           }
-          updateMuteListener()
+
+          // Handle async initialization
+          if (isAudioReady) {
+            updateMuteListener()
+          } else {
+            audioReadyCallbacks.add(() => {
+              updateMuteListener()
+              callback()
+            })
+          }
+
           const micChangeId = audio.connect("notify::default-microphone", updateMuteListener)
 
           return () => {
@@ -339,20 +456,20 @@ export function SettingsPopup() {
 
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
-      <box orientation={Gtk.Orientation.VERTICAL} spacing={12} cssClasses={["settings-menu"]}>
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={6} cssClasses={["settings-menu"]}>
         {/* Audio Section */}
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["settings-section"]}>
-          <box cssClasses={["section-title"]} spacing={8}>
-            <Gtk.Image iconName="audio-speakers-symbolic" pixelSize={16} />
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["settings-section"]}>
+          <box cssClasses={["section-title"]} spacing={6}>
+            <Gtk.Image iconName="audio-speakers-symbolic" pixelSize={14} />
             <label cssClasses={["section-title-label"]} label="Audio" />
           </box>
 
           {/* Speaker Volume */}
-          <box cssClasses={["audio-slider-row"]} spacing={8}>
+          <box cssClasses={["audio-slider-row"]} spacing={6}>
             <button cssClasses={["icon-button"]} onClicked={toggleMute}>
               <Gtk.Image
                 iconName={volumeMuted.as((m) => getVolumeIcon(m, volume.peek()))}
-                pixelSize={18}
+                pixelSize={16}
               />
             </button>
             <box cssClasses={["slider-container"]} hexpand>
@@ -386,11 +503,11 @@ export function SettingsPopup() {
           </box>
 
           {/* Microphone Volume */}
-          <box cssClasses={["audio-slider-row"]} spacing={8}>
+          <box cssClasses={["audio-slider-row"]} spacing={6}>
             <button cssClasses={["icon-button"]} onClicked={toggleMicMute}>
               <Gtk.Image
                 iconName={micMuted.as((m) => getMicIcon(m))}
-                pixelSize={18}
+                pixelSize={16}
               />
             </button>
             <box cssClasses={["slider-container"]} hexpand>
@@ -425,25 +542,27 @@ export function SettingsPopup() {
 
           {/* Sink Selector (Output) */}
           <DeviceSelector
-            label="sink Selector"
-            icon="audio-headphones-symbolic"
+            label="Output Device"
+            icon="audio-speakers-symbolic"
             endpoints={speakersAccessor}
+            type="speaker"
           />
 
           {/* Source Selector (Input) */}
           <DeviceSelector
-            label="source Selector"
+            label="Input Device"
             icon="audio-input-microphone-symbolic"
             endpoints={microphonesAccessor}
+            type="microphone"
           />
         </box>
 
         <box cssClasses={["separator"]} />
 
         {/* Brightness Section */}
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["settings-section"]}>
-          <box cssClasses={["settings-header"]} spacing={8}>
-            <Gtk.Image iconName="display-brightness-symbolic" pixelSize={20} />
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["settings-section"]}>
+          <box cssClasses={["settings-header"]} spacing={6}>
+            <Gtk.Image iconName="display-brightness-symbolic" pixelSize={16} />
             <label cssClasses={["settings-label"]} label="Brightness" hexpand halign={Gtk.Align.START} />
             <label cssClasses={["settings-value"]} label={brightnessValue.as((v) => `${v}%`)} />
           </box>

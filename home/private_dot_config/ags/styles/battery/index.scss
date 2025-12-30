@@ -1,118 +1,135 @@
 @use "../variables" as *;
 
+$profile-color: #9b7dd4;
+
 .battery-widget {
   padding: 4px 8px;
   font-size: 0.7em;
 }
 
 .battery-menu {
-  min-width: 240px;
-  padding: 12px;
+  min-width: 200px;
+  padding: 10px;
 }
 
 .separator {
   min-height: 1px;
   background: $separator-color;
-  margin: 8px 0;
+  margin: 6px 0;
 }
 
 // Time remaining section
 .time-section {
-  padding: 8px 4px;
+  padding: 0;
 }
 
 .time-label {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 600;
   color: $text-secondary;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin-bottom: 2px;
 }
 
 .time-display {
-  padding: 8px 0;
+  padding: 4px 0;
 }
 
 .time-unit {
-  min-width: 48px;
+  min-width: 36px;
 }
 
 .time-value {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
   color: $text-primary;
 }
 
 .time-separator {
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 300;
   color: $text-muted;
-  margin-top: -4px;
+  margin-top: -2px;
 }
 
 .time-unit-label {
-  font-size: 10px;
+  font-size: 9px;
   color: $text-muted;
   text-transform: uppercase;
 }
 
-// Profile slider section
+// Power profile section
 .profile-section {
-  padding: 8px 4px;
+  padding: 0;
 }
 
-.profile-header {
-  margin-bottom: 4px;
-}
-
-.profile-header image {
+.profile-title {
+  font-size: 11px;
+  font-weight: 600;
   color: $text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
 }
 
-.profile-label {
-  font-size: 14px;
-  font-weight: 500;
-  color: $text-primary;
+.profile-buttons {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  padding: 3px;
 }
 
-.slider-container {
-  padding: 4px 0;
-}
+.profile-btn {
+  padding: 6px 12px;
+  border-radius: 16px;
+  border: none;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+  transition: all 100ms ease;
 
-.profile-slider {
-  min-height: 24px;
-
-  trough {
-    min-height: 6px;
-    border-radius: 3px;
-    background: $hover-bg;
+  > box {
+    margin: 0;
+    padding: 0;
   }
 
-  highlight {
-    min-height: 6px;
-    border-radius: 3px;
-    background: $accent-color;
-  }
-
-  slider {
-    min-width: 18px;
-    min-height: 18px;
-    border-radius: 50%;
-    background: $text-primary;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  }
-}
-
-.slider-labels {
-  padding-top: 4px;
-
-  label {
-    font-size: 10px;
+  image {
     color: $text-muted;
-    transition: color 150ms ease;
+    -gtk-icon-size: 16px;
+  }
 
-    &.active {
-      color: $text-primary;
-      font-weight: 500;
+  &:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.05);
+
+    image {
+      color: $text-secondary;
+    }
+  }
+
+  // Power saver - green
+  &.profile-power-saver.active {
+    background: #27ae60;
+
+    image {
+      color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  // Balanced - purple
+  &.profile-balanced.active {
+    background: $profile-color;
+
+    image {
+      color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  // Performance - orange
+  &.profile-performance.active {
+    background: #f2994a;
+
+    image {
+      color: rgba(0, 0, 0, 0.85);
     }
   }
 }

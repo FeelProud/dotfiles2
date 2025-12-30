@@ -2,19 +2,22 @@
 
 .power-button {
   padding: 4px 8px;
-  font-size: 1.8em;
+  font-size: 1em;
 }
 
 .power-menu {
-  min-width: 180px;
+  padding: 2px;
+  margin: -4px; // compensate for box spacing
 
   .power-option {
-    padding: 10px 16px;
-    margin: 2px 0;
-    border-radius: 8px;
+    padding: 5px 8px;
+    margin: 0;
+    border-radius: 4px;
     background: transparent;
     border: none;
-    transition: all 150ms ease;
+    min-height: 0;
+    min-width: 0;
+    transition: background 100ms ease;
 
     &:hover {
       background: $hover-bg;
@@ -22,6 +25,30 @@
 
     &:active {
       background: $active-bg;
+    }
+
+    > box {
+      margin: 0;
+      padding: 0;
+    }
+
+    .power-icon {
+      font-size: 13px;
+      color: $text-muted;
+      min-width: 16px;
+    }
+
+    label:not(.power-icon) {
+      font-size: 11px;
+      color: $text-secondary;
+    }
+
+    &:hover .power-icon {
+      color: $text-secondary;
+    }
+
+    &:hover label:not(.power-icon) {
+      color: $text-primary;
     }
   }
 }

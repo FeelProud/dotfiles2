@@ -1,0 +1,164 @@
+@use "../variables" as *;
+
+$bt-color: #9b7dd4;
+
+.bluetooth-widget {
+  padding: 4px 8px;
+}
+
+.bt-menu {
+  min-width: 220px;
+  padding: 10px;
+}
+
+// Header row
+.bt-header {
+  padding: 0 2px;
+  margin-bottom: 2px;
+
+  image {
+    color: $text-secondary;
+  }
+}
+
+.bt-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bt-settings-btn {
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+
+  image {
+    color: $text-muted;
+  }
+
+  &:hover {
+    background: $hover-bg;
+
+    image {
+      color: $text-secondary;
+    }
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+}
+
+// Switch styling
+switch {
+  min-width: 36px;
+  min-height: 18px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+
+  &:checked {
+    background: $bt-color;
+  }
+
+  slider {
+    min-width: 14px;
+    min-height: 14px;
+    border-radius: 7px;
+    background: white;
+    margin: 2px;
+  }
+}
+
+// Scan icon button (in header)
+.bt-menu .scan-icon-btn {
+  padding: 4px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  min-width: 0;
+  min-height: 0;
+
+  image {
+    color: $text-muted;
+  }
+
+  spinner {
+    color: $bt-color;
+  }
+
+  &:hover {
+    background: $hover-bg;
+
+    image {
+      color: $text-secondary;
+    }
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+  }
+
+  &.scanning {
+    image {
+      color: $bt-color;
+    }
+  }
+}
+
+.separator {
+  min-height: 1px;
+  background: $separator-color;
+  margin: 4px 0;
+}
+
+// Device list
+.bt-device-list {
+  padding: 0;
+}
+
+.bt-device {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  transition: background 100ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  &.connected {
+    background: rgba($bt-color, 0.15);
+
+    .bt-device-name {
+      color: $text-primary;
+    }
+
+    image {
+      color: $bt-color;
+    }
+  }
+
+  image {
+    color: $text-muted;
+  }
+}
+
+.bt-device-name {
+  font-size: 12px;
+  color: $text-secondary;
+}

@@ -100,17 +100,18 @@ export function ArchLogoPopup() {
 
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
           <box spacing={8}>
-            <Gtk.Image iconName="cpu-symbolic" cssClasses={["stat-icon"]} />
+            <Gtk.Image iconName="preferences-system-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="CPU" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
             <label label={cpuUsage} cssClasses={["stat-value"]} />
           </box>
+          <box cssClasses={["stat-detail-spacer"]} />
         </box>
 
         <box cssClasses={["separator"]} />
 
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
           <box spacing={8}>
-            <Gtk.Image iconName="memory-symbolic" cssClasses={["stat-icon"]} />
+            <Gtk.Image iconName="drive-harddisk-solidstate-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="RAM" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
             <label label={memInfo.as(m => m.percent)} cssClasses={["stat-value"]} />
           </box>
@@ -125,7 +126,7 @@ export function ArchLogoPopup() {
 
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
           <box spacing={8}>
-            <Gtk.Image iconName="drive-harddisk-symbolic" cssClasses={["stat-icon"]} />
+            <Gtk.Image iconName="drive-harddisk-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
             <label label="Disk" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
             <label label={diskInfo.as(d => d.percent)} cssClasses={["stat-value"]} />
           </box>

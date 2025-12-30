@@ -8,7 +8,7 @@ export function PowerButton() {
   return (
     <PopupButton popupName={POPUP_NAME} cssClasses={["power-button"]}>
       <box>
-        <label label="⏻" />
+        <label label="power_settings_new" cssClasses={["power-icon"]} />
       </box>
     </PopupButton>
   )
@@ -23,7 +23,7 @@ export function PowerPopup() {
           onClicked={() => execAsync("systemctl poweroff")}
         >
           <box spacing={8}>
-            <label label="⏻" />
+            <label label="power_settings_new" cssClasses={["power-icon"]} />
             <label label="Shutdown" />
           </box>
         </button>
@@ -32,7 +32,7 @@ export function PowerPopup() {
           onClicked={() => execAsync("systemctl reboot")}
         >
           <box spacing={8}>
-            <label label="⟳" />
+            <label label="restart_alt" cssClasses={["power-icon"]} />
             <label label="Reboot" />
           </box>
         </button>
@@ -41,7 +41,7 @@ export function PowerPopup() {
           onClicked={() => execAsync("systemctl suspend")}
         >
           <box spacing={8}>
-            <label label="⏾" />
+            <label label="bedtime" cssClasses={["power-icon"]} />
             <label label="Suspend" />
           </box>
         </button>
@@ -50,7 +50,7 @@ export function PowerPopup() {
           onClicked={() => execAsync("hyprctl dispatch exit")}
         >
           <box spacing={8}>
-            <label label="⎋" />
+            <label label="logout" cssClasses={["power-icon"]} />
             <label label="Logout" />
           </box>
         </button>

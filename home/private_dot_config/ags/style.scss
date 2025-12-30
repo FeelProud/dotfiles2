@@ -14,3 +14,35 @@
 @use "styles/battery";
 @use "styles/archlogo";
 @use "styles/settings";
+@use "styles/bluetooth";
+@use "styles/wifi";
+
+// Global font setting - Ubuntu Nerd Font for text
+* {
+  font-family: "Ubuntu Nerd Font", "Ubuntu", sans-serif;
+  font-weight: 400;
+}
+
+label {
+  font-family: "Ubuntu Nerd Font", "Ubuntu", sans-serif;
+}
+
+// Icon labels using Material Symbols Rounded
+.power-icon {
+  font-family: "Material Symbols Rounded";
+  font-size: 18px;
+}
+
+// Bar icons using Material Symbols Rounded
+.bar-icon {
+  font-family: "Material Symbols Rounded";
+  font-size: 18px;
+}
+
+
+// Icon font for symbols
+.icon,
+.symbolic,
+image {
+  font-family: "Material Symbols Rounded", "Font Awesome 6 Free";
+}

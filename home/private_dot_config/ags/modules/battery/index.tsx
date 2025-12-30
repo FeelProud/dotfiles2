@@ -33,18 +33,44 @@ export function Battery() {
     }
   )
 
+  // Battery Icon - use Material Symbols based on charge level and charging state
   const batteryIcon = new Accessor(
-    () => battery.batteryIconName,
+    () => {
+      const pct = Math.round(battery.percentage * 100)
+      const charging = battery.charging
+
+      if (charging) {
+        if (pct >= 90) return "battery_charging_full"
+        if (pct >= 80) return "battery_charging_90"
+        if (pct >= 60) return "battery_charging_80"
+        if (pct >= 50) return "battery_charging_60"
+        if (pct >= 30) return "battery_charging_50"
+        if (pct >= 20) return "battery_charging_30"
+        return "battery_charging_20"
+      }
+
+      if (pct >= 95) return "battery_full"
+      if (pct >= 85) return "battery_6_bar"
+      if (pct >= 70) return "battery_5_bar"
+      if (pct >= 55) return "battery_4_bar"
+      if (pct >= 40) return "battery_3_bar"
+      if (pct >= 25) return "battery_2_bar"
+      if (pct >= 10) return "battery_1_bar"
+      return "battery_alert"
+    },
     (callback) => {
-      const id = battery.connect("notify::battery-icon-name", callback)
-      return () => battery.disconnect(id)
+      const ids = [
+        battery.connect("notify::percentage", callback),
+        battery.connect("notify::charging", callback)
+      ]
+      return () => ids.forEach(id => battery.disconnect(id))
     }
   )
 
   return (
     <PopupButton popupName={POPUP_NAME} cssClasses={["battery-widget"]}>
       <box spacing={4}>
-        <Gtk.Image iconName={batteryIcon.as(i => i || "battery-missing-symbolic")} />
+        <label label={batteryIcon.as(i => i)} cssClasses={["bar-icon"]} />
         <label label={percentage.as(p => p)} />
       </box>
     </PopupButton>
@@ -121,15 +147,6 @@ export function BatteryPopup() {
     powerProfiles.activeProfile = profile
   }
 
-  const profileToIndex = (profile: PowerProfile): number => PROFILES.indexOf(profile)
-  const indexToProfile = (index: number): PowerProfile => PROFILES[Math.round(index)] || "balanced"
-
-  const onSliderChange = (scale: Gtk.Scale) => {
-    const value = scale.get_value()
-    const profile = indexToProfile(value)
-    setProfile(profile)
-  }
-
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["battery-menu"]}>
@@ -170,44 +187,20 @@ export function BatteryPopup() {
 
         <box cssClasses={["separator"]} />
 
-        {/* Power Profile Slider Section */}
-        <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["profile-section"]}>
-          <box cssClasses={["profile-header"]} spacing={8}>
-            <Gtk.Image iconName={currentProfile.as(p => PROFILE_ICONS[p])} pixelSize={20} />
-            <label
-              cssClasses={["profile-label"]}
-              label={currentProfile.as(p => PROFILE_LABELS[p])}
-            />
-          </box>
-          <box cssClasses={["slider-container"]}>
-            <Gtk.Scale
-              cssClasses={["profile-slider"]}
-              orientation={Gtk.Orientation.HORIZONTAL}
-              hexpand={true}
-              drawValue={false}
-              round_digits={0}
-              adjustment={
-                new Gtk.Adjustment({
-                  lower: 0,
-                  upper: 2,
-                  step_increment: 1,
-                  page_increment: 1,
-                  value: profileToIndex(powerProfiles.activeProfile as PowerProfile),
-                })
-              }
-              onValueChanged={onSliderChange}
-            />
-          </box>
-          <box cssClasses={["slider-labels"]} homogeneous={true}>
+        {/* Power Profile Section */}
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["profile-section"]}>
+          <label cssClasses={["profile-title"]} label="Power Profile" halign={Gtk.Align.START} />
+          <box cssClasses={["profile-buttons"]} homogeneous={true}>
             {PROFILES.map((profile) => (
-              <label
-                label={PROFILE_LABELS[profile]}
-                cssClasses={currentProfile.as(p => p === profile ? ["active"] : [])}
-                halign={
-                  profile === "power-saver" ? Gtk.Align.START :
-                  profile === "performance" ? Gtk.Align.END : Gtk.Align.CENTER
-                }
-              />
+              <button
+                cssClasses={currentProfile.as(p =>
+                  p === profile ? ["profile-btn", `profile-${profile}`, "active"] : ["profile-btn", `profile-${profile}`]
+                )}
+                onClicked={() => setProfile(profile)}
+                tooltipText={PROFILE_LABELS[profile]}
+              >
+                <Gtk.Image iconName={PROFILE_ICONS[profile]} pixelSize={16} />
+              </button>
             ))}
           </box>
         </box>
