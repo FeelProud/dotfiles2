@@ -176,6 +176,13 @@ export function BatteryPopup() {
     }
   )
 
+  // Auto-switch from performance to balanced when unplugging
+  battery.connect("notify::charging", () => {
+    if (!battery.charging && powerProfiles.activeProfile === "performance") {
+      powerProfiles.activeProfile = "balanced"
+    }
+  })
+
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["battery-menu"]}>
