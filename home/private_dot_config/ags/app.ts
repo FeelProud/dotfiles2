@@ -6,7 +6,7 @@ import { BatteryPopup } from "./modules/battery"
 import { BluetoothPopup } from "./modules/bluetooth"
 import { WifiPopup } from "./modules/wifi"
 import { PowerPopup } from "./modules/powermenu"
-import { ClockPopup } from "./modules/clock"
+import { AgendaPopup } from "./modules/agenda"
 import { SettingsPopup } from "./modules/settings"
 
 app.start({
@@ -31,7 +31,7 @@ app.start({
     BluetoothPopup()
     WifiPopup()
     PowerPopup()
-    ClockPopup()
+    AgendaPopup()
     SettingsPopup()
   },
 })

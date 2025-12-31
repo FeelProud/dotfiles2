@@ -1,7 +1,7 @@
 import { Gtk } from "ags/gtk4"
 import { Accessor, For, createState } from "ags"
 import { execAsync } from "ags/process"
-import AstalBluetooth from "gi://AstalBluetooth?version=0.1"
+import AstalBluetooth from "gi://AstalBluetooth"
 import { PopupWindow, PopupButton } from "../popup"
 
 // Track if we're currently toggling to prevent feedback loops

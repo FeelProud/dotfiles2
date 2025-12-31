@@ -1,6 +1,7 @@
 import { Gtk } from "ags/gtk4"
 import { createPoll } from "ags/time"
 import { readFile } from "ags/file"
+import { execAsync } from "ags/process"
 import Gio from "gi://Gio"
 import { PopupWindow, PopupButton } from "../popup"
 
@@ -91,10 +92,38 @@ export function ArchLogoPopup() {
     }
   })
 
+  const updateCount = createPoll(0, 600000, async () => {
+    try {
+      const result = await execAsync("checkupdates")
+      const lines = result.trim().split("\n").filter((line) => line.length > 0)
+      return lines.length
+    } catch {
+      return 0
+    }
+  })
+
   return (
     <PopupWindow name={POPUP_NAME} position="top-left">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["system-stats-menu"]}>
         <label label="System Stats" cssClasses={["stats-header"]} />
+
+        <box cssClasses={["separator"]} />
+
+        <button
+          cssClasses={updateCount.as(c => c > 0 ? ["stat-section", "stat-button"] : ["stat-section", "stat-button", "disabled"])}
+          onClicked={() => {
+            if (updateCount.peek() > 0) {
+              execAsync(["kitty", "-e", "paru"])
+            }
+          }}
+          sensitive={updateCount.as(c => c > 0)}
+        >
+          <box spacing={8}>
+            <Gtk.Image iconName="software-update-available-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
+            <label label="Updates" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
+            <label label={updateCount.as(c => c > 0 ? `${c} available` : "Up to date")} cssClasses={["stat-value"]} />
+          </box>
+        </button>
 
         <box cssClasses={["separator"]} />
 

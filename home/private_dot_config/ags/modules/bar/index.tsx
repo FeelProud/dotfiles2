@@ -6,7 +6,7 @@ import { Workspaces } from "../workspaces"
 import { ArchLogo } from "../archlogo"
 import { SystemTray } from "../systemtray"
 import { PowerButton } from "../powermenu"
-import { Clock } from "../clock"
+import { Agenda } from "../agenda"
 import { Battery } from "../battery"
 import { Wifi } from "../wifi"
 import { Bluetooth } from "../bluetooth"
@@ -30,8 +30,8 @@ export function TopBar(gdkmonitor: Gdk.Monitor, index: number) {
           <ArchLogo />
           <Workspaces />
         </box>
-        <box $type="center" halign={Gtk.Align.CENTER}>
-          <Clock />
+        <box $type="center" halign={Gtk.Align.CENTER} cssClasses={["bar-center-widget"]}>
+          <Agenda />
         </box>
         <box $type="end" halign={Gtk.Align.END} spacing={4}>
           <SystemTray />

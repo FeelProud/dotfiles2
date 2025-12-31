@@ -136,7 +136,6 @@ $profile-color: $accent-primary;
   // Disabled state (e.g., performance on battery)
   &.disabled {
     opacity: 0.4;
-    cursor: not-allowed;
 
     &:hover {
       background: transparent;

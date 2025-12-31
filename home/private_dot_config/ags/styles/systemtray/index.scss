@@ -1,3 +1,5 @@
+@use "../variables" as *;
+
 .system-tray {
   menubutton {
     padding: 4px;
@@ -6,5 +8,75 @@
   icon {
     min-width: 16px;
     min-height: 16px;
+  }
+}
+
+.system-tray-separator {
+  min-width: 1px;
+  min-height: 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+// Style the system tray popover menu to match popup style
+.system-tray-item {
+  popover,
+  popover.background,
+  popover.menu {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+
+    > contents,
+    contents {
+      background: $popup-bg-solid;
+      border: 1px solid $popup-border;
+      border-radius: $popup-border-radius;
+      padding: 8px;
+      margin-top: 8px;
+      color: $text-primary;
+      box-shadow: $popup-shadow;
+    }
+
+    > arrow,
+    arrow {
+      all: unset;
+      background: transparent;
+      border: none;
+      min-width: 0;
+      min-height: 0;
+      opacity: 0;
+    }
+
+    // Menu items styling
+    modelbutton,
+    button.model {
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: transparent;
+      color: $text-primary;
+      transition: background-color 150ms ease;
+
+      &:hover {
+        background: $hover-bg;
+      }
+
+      &:active {
+        background: $active-bg;
+      }
+    }
+
+    // Separator in menu
+    separator {
+      min-height: 1px;
+      background: $separator-color;
+      margin: 4px 8px;
+    }
+
+    // Submenu indicators
+    .arrow {
+      color: $text-secondary;
+    }
   }
 }

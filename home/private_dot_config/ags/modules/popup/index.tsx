@@ -1,6 +1,7 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { Accessor, createState } from "ags"
+import Hyprland from "gi://AstalHyprland"
 
 // Global popup state manager
 const popupStates = new Map<string, [Accessor<boolean>, (v: boolean) => void]>()
@@ -82,6 +83,20 @@ export function PopupWindow({
       return false
     })
     win.add_controller(keyController)
+
+    // Auto-close on workspace change or new client
+    const hypr = Hyprland.get_default()
+    const workspaceId = hypr.connect("notify::focused-workspace", () => {
+      closePopup(name)
+    })
+    const clientAddedId = hypr.connect("client-added", () => {
+      closePopup(name)
+    })
+
+    win.connect("destroy", () => {
+      hypr.disconnect(workspaceId)
+      hypr.disconnect(clientAddedId)
+    })
   }
 
   // Click catcher button that closes the popup

@@ -295,9 +295,10 @@ function InlinePasswordEntry() {
 }
 
 function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; activeApSsid: Accessor<string | null> }) {
-  const ssid = ap.ssid || "WiFi"
-  const bssid = ap.bssid || ""
-  const isActive = activeApSsid.as(activeSsid => activeSsid === ap.ssid)
+  const ssid = ap?.ssid || "WiFi"
+  const bssid = ap?.bssid || ""
+  const strength = ap?.strength ?? 0
+  const isActive = activeApSsid.as(activeSsid => activeSsid === ap?.ssid)
   const isConnecting = connectingBssid.as(connecting => connecting === bssid)
 
   const getStrengthIcon = (strength: number): string => {
@@ -309,7 +310,8 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
   }
 
   const connectToAp = async () => {
-    // Don't connect if already connected or already connecting
+    // Don't connect if already connected, already connecting, or invalid ap
+    if (!ap) return
     if (activeApSsid.peek() === ap.ssid) return
     if (connectingBssid.peek() !== null) return
     if (!bssid || !isValidBssid(bssid)) return
@@ -354,7 +356,7 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
   const cssClasses = new Accessor(
     () => {
       const classes = ["net-item"]
-      if (activeApSsid.peek() === ap.ssid) classes.push("connected")
+      if (activeApSsid.peek() === ap?.ssid) classes.push("connected")
       if (connectingBssid.peek() === bssid) classes.push("connecting")
       return classes
     },
@@ -375,9 +377,9 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
       sensitive={isConnecting.as(c => !c)}
     >
       <box spacing={8}>
-        <Gtk.Image iconName={getStrengthIcon(ap.strength)} pixelSize={14} />
+        <Gtk.Image iconName={getStrengthIcon(strength)} pixelSize={14} />
         <label
-          label={ap.ssid || "Hidden Network"}
+          label={ssid || "Hidden Network"}
           cssClasses={["net-item-name"]}
           hexpand
           halign={Gtk.Align.START}
@@ -389,7 +391,7 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
           pixelSize={12}
           visible={isActive.as(active => {
             const connecting = connectingBssid.peek() === bssid
-            return ap.requiresPassword && !active && !connecting
+            return ap?.requiresPassword && !active && !connecting
           })}
         />
         {/* Spinner when connecting */}
@@ -472,17 +474,18 @@ export function WifiPopup() {
       const seen = new Set<string>()
       return wifi.accessPoints
         .filter(ap => {
-          if (!ap.ssid || seen.has(ap.ssid)) return false
+          // Skip null/invalid access points
+          if (!ap || !ap.ssid || seen.has(ap.ssid)) return false
           seen.add(ap.ssid)
           return true
         })
         .sort((a, b) => {
           const activeAp = wifi.activeAccessPoint
-          if (activeAp) {
+          if (activeAp?.ssid) {
             if (a.ssid === activeAp.ssid) return -1
             if (b.ssid === activeAp.ssid) return 1
           }
-          return b.strength - a.strength
+          return (b.strength ?? 0) - (a.strength ?? 0)
         })
         .slice(0, 8)
     },
