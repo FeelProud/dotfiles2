@@ -2,11 +2,11 @@
 
 // Fullscreen popup window (covers entire screen for click-outside-to-close)
 .popup-window-fullscreen {
-  background: transparent;
+  background-color: rgba(0, 0, 0, 0);
 
   // Click catcher buttons - transparent areas that close popup on click
   .popup-click-catcher {
-    background: transparent;
+    background-color: rgba(0, 0, 0, 0);
     border: none;
     outline: none;
     box-shadow: none;
@@ -14,8 +14,6 @@
     min-height: 0;
     padding: 0;
     margin: 0;
-    // Optionally add a subtle dark overlay to indicate modal state:
-    // background: rgba(0, 0, 0, 0.2);
   }
 
   // Popup content styling (same as legacy .popup-window)
