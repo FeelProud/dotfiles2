@@ -1,4 +1,5 @@
 import { Gtk } from "ags/gtk4"
+import { createState } from "ags"
 import { createPoll } from "ags/time"
 import { readFile } from "ags/file"
 import { execAsync } from "ags/process"
@@ -92,15 +93,21 @@ export function ArchLogoPopup() {
     }
   })
 
-  const updateCount = createPoll(0, 600000, async () => {
+  const [updateCount, setUpdateCount] = createState(0)
+
+  const checkUpdates = async () => {
     try {
       const result = await execAsync("checkupdates")
       const lines = result.trim().split("\n").filter((line) => line.length > 0)
-      return lines.length
+      setUpdateCount(lines.length)
     } catch {
-      return 0
+      setUpdateCount(0)
     }
-  })
+  }
+
+  // Initial check and periodic polling
+  checkUpdates()
+  setInterval(checkUpdates, 600000)
 
   return (
     <PopupWindow name={POPUP_NAME} position="top-left">
@@ -111,9 +118,10 @@ export function ArchLogoPopup() {
 
         <button
           cssClasses={updateCount.as(c => c > 0 ? ["stat-section", "stat-button"] : ["stat-section", "stat-button", "disabled"])}
-          onClicked={() => {
+          onClicked={async () => {
             if (updateCount.peek() > 0) {
-              execAsync(["kitty", "-e", "paru"])
+              await execAsync(["kitty", "-e", "paru"])
+              checkUpdates()
             }
           }}
           sensitive={updateCount.as(c => c > 0)}

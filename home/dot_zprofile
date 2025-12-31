@@ -2,8 +2,7 @@
 if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" && "$(tty)" = "/dev/tty1" ]]; then
   # Uncomment NVIDIA cursor glitches:
   # export WLR_NO_HARDWARE_CURSORS=1
-
-  exec dbus-run-session Hyprland
+  exec start-hyprland
 fi
 
 export PATH="$PATH:/home/marc/.local/bin"
