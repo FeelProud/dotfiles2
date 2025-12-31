@@ -26,6 +26,40 @@ if (wp) {
   })
 }
 
+// Color mode state (light/dark using hyprsunset)
+type ColorMode = "light" | "dark"
+let currentColorMode: ColorMode = "light"
+const colorModeSubscribers: Set<() => void> = new Set()
+
+const colorModeValue = new Accessor(
+  () => currentColorMode,
+  (callback) => {
+    colorModeSubscribers.add(callback)
+    return () => colorModeSubscribers.delete(callback)
+  }
+)
+
+const setColorMode = (mode: ColorMode) => {
+  currentColorMode = mode
+  colorModeSubscribers.forEach((cb) => cb())
+
+  // Kill any existing hyprsunset process first, then start if dark mode
+  execAsync(["pkill", "-x", "hyprsunset"]).catch(() => {}).finally(() => {
+    if (mode === "dark") {
+      // Warm/night mode - start hyprsunset with lower temperature
+      subprocess(["hyprsunset", "-t", "4000"], () => {})
+    }
+  })
+}
+
+// Check initial state (if hyprsunset is running, we're in dark mode)
+execAsync(["pgrep", "hyprsunset"]).then(() => {
+  currentColorMode = "dark"
+  colorModeSubscribers.forEach((cb) => cb())
+}).catch(() => {
+  currentColorMode = "light"
+})
+
 // Brightness state - reactive using udevadm monitor for instant updates
 const getBrightness = async (): Promise<number> => {
   try {
@@ -592,6 +626,42 @@ export function SettingsPopup() {
                 })
               }}
             />
+          </box>
+        </box>
+
+        <box cssClasses={["separator"]} />
+
+        {/* Color Mode Section */}
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["settings-section"]}>
+          <box cssClasses={["settings-header"]} spacing={6}>
+            <Gtk.Image iconName="weather-clear-symbolic" pixelSize={16} />
+            <label cssClasses={["settings-label"]} label="Color Mode" hexpand halign={Gtk.Align.START} />
+          </box>
+          <box cssClasses={["color-mode-buttons"]} homogeneous={true} spacing={4}>
+            <button
+              cssClasses={colorModeValue.as(m =>
+                m === "light" ? ["color-mode-btn", "active"] : ["color-mode-btn"]
+              )}
+              onClicked={() => setColorMode("light")}
+              tooltipText="Normal display colors"
+            >
+              <box spacing={6}>
+                <Gtk.Image iconName="weather-clear-symbolic" pixelSize={14} />
+                <label label="Light" />
+              </box>
+            </button>
+            <button
+              cssClasses={colorModeValue.as(m =>
+                m === "dark" ? ["color-mode-btn", "active"] : ["color-mode-btn"]
+              )}
+              onClicked={() => setColorMode("dark")}
+              tooltipText="Warm night mode (4000K)"
+            >
+              <box spacing={6}>
+                <Gtk.Image iconName="weather-clear-night-symbolic" pixelSize={14} />
+                <label label="Dark" />
+              </box>
+            </button>
           </box>
         </box>
       </box>

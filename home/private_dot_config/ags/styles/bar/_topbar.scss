@@ -1,33 +1,19 @@
+@use "common" as *;
+
 window.TopBar {
-  background: transparent;
-  color: white;
-  font-weight: 400;
+  @include bar-base;
 
-  > centerbox {
-    background: transparent;
-    margin: 0;
-    padding: 0;
+  > centerbox > box {
+    &:first-child {
+      @include bar-section("start-top");
+    }
 
-    > box {
-      background: rgba(20, 20, 25, 0.6);
-      padding: 0px 2px;
-      margin: 0;
+    &:last-child {
+      @include bar-section("end-top");
+    }
 
-      &:first-child {
-        padding-right: 10px;
-        border-radius: 0 0 16px 0;
-      }
-
-      &:last-child {
-        padding-left: 10px;
-        border-radius: 0 0 0 16px;
-      }
-
-      &:nth-child(2) {
-        padding-left: 10px;
-        padding-right: 10px;
-        border-radius: 0 0 16px 16px;
-      }
+    &:nth-child(2) {
+      @include bar-section("center-top");
     }
   }
 
@@ -39,24 +25,8 @@ window.TopBar {
       background: rgba(255, 255, 255, 0.1);
     }
 
-    // Disable hover effect on button inside center widget
-    button {
-      &:hover {
-        background: transparent;
-      }
-    }
-  }
-
-  button {
-    border-radius: 4px;
-    margin: 1px;
-    padding: 1px 3px;
-    background: transparent;
-    border: none;
-    transition: background-color 200ms;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
+    button:hover {
+      background: transparent;
     }
   }
 

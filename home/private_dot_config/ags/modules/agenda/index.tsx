@@ -1,11 +1,16 @@
 import { Gtk } from "ags/gtk4"
-import { Accessor, For } from "ags"
+import GLib from "gi://GLib"
+import { Accessor, For, createState } from "ags"
 import { createPoll } from "ags/time"
-import { PopupWindow, PopupButton } from "../popup"
+import { PopupWindow, PopupButton, closePopup } from "../popup"
 import Mpris from "gi://AstalMpris"
 import Notifd from "gi://AstalNotifd"
+import { execAsync } from "ags/process"
 
 const POPUP_NAME = "agenda-popup"
+
+// Screen recording state
+const [isRecording, setIsRecording] = createState(false)
 
 // Time display for bar widget
 const time = createPoll("", 1000, "date +'%a %d %b • %I:%M %p'")
@@ -254,6 +259,101 @@ function MusicPlayer({ player }: { player: Mpris.Player }) {
   )
 }
 
+// Quick tool button component
+function QuickToolButton({
+  icon,
+  label,
+  command,
+}: {
+  icon: string
+  label: string
+  command: string
+}) {
+  return (
+    <button
+      cssClasses={["quick-tool-button"]}
+      tooltipText={label}
+      onClicked={() => {
+        closePopup(POPUP_NAME)
+        setTimeout(() => {
+          execAsync(["bash", "-c", command]).catch(() => {})
+        }, 100)
+      }}
+    >
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={4}>
+        <label label={icon} cssClasses={["quick-tool-icon"]} />
+        <label label={label} cssClasses={["quick-tool-label"]} />
+      </box>
+    </button>
+  )
+}
+
+// Screen recording toggle button
+function RecordButton() {
+  const toggleRecording = async () => {
+    if (isRecording()) {
+      // Stop recording
+      execAsync(["pkill", "-SIGINT", "wf-recorder"]).catch(() => {})
+      setIsRecording(false)
+    } else {
+      // Start recording - first get the region
+      closePopup(POPUP_NAME)
+      try {
+        // Get region selection first
+        const geometry = await execAsync(["slurp"])
+        if (geometry) {
+          const home = GLib.get_home_dir()
+          const filename = `${home}/Videos/recording-${new Date().toISOString().replace(/[:.]/g, "-")}.mp4`
+          setIsRecording(true)
+          execAsync(["wf-recorder", "-g", geometry.trim(), "-f", filename])
+            .then(() => setIsRecording(false))
+            .catch(() => setIsRecording(false))
+        }
+      } catch {
+        // User cancelled slurp
+      }
+    }
+  }
+
+  return (
+    <button
+      cssClasses={isRecording.as((r) => (r ? ["quick-tool-button", "recording"] : ["quick-tool-button"]))}
+      tooltipText={isRecording.as((r) => (r ? "Stop Recording" : "Record"))}
+      onClicked={toggleRecording}
+    >
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={4}>
+        <label
+          label={isRecording.as((r) => (r ? "stop_circle" : "videocam"))}
+          cssClasses={["quick-tool-icon"]}
+        />
+        <label
+          label={isRecording.as((r) => (r ? "Stop" : "Record"))}
+          cssClasses={["quick-tool-label"]}
+        />
+      </box>
+    </button>
+  )
+}
+
+// Quick Tools section
+function QuickTools() {
+  return (
+    <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["agenda-section"]}>
+      <box cssClasses={["section-title"]} spacing={6}>
+        <label label="build" cssClasses={["section-icon"]} />
+        <label cssClasses={["section-title-label"]} label="Quick Tools" />
+      </box>
+      <box spacing={8} cssClasses={["quick-tools-grid"]} homogeneous>
+        <QuickToolButton icon="colorize" label="Picker" command="hyprpicker -a" />
+        <QuickToolButton icon="screenshot_region" label="Screenshot" command="hyprshot -m region -o ~/Pictures/Screenshots" />
+        <RecordButton />
+        <QuickToolButton icon="calculate" label="Calculator" command="qalculate-gtk" />
+        <QuickToolButton icon="event" label="Agenda" command="gnome-calendar" />
+      </box>
+    </box>
+  )
+}
+
 // Single notification item
 function NotificationItem({ notification }: { notification: Notifd.Notification }) {
   const actionsAccessor = new Accessor(
@@ -318,6 +418,7 @@ function NotificationItem({ notification }: { notification: Notifd.Notification 
           spacing={4}
           cssClasses={["notification-actions"]}
           marginTop={4}
+          halign={Gtk.Align.END}
           visible={actionsAccessor.as((a) => a.length > 0)}
         >
           <For each={actionsAccessor}>
@@ -350,6 +451,11 @@ export function AgendaPopup() {
   return (
     <PopupWindow name={POPUP_NAME} position="top-center">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["agenda-menu"]}>
+        {/* Quick Tools Section */}
+        <QuickTools />
+
+        <box cssClasses={["separator"]} />
+
         {/* Music Player Section */}
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["agenda-section"]}>
           <box cssClasses={["section-title"]} spacing={6}>

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+# Disable predictable network interface naming (use classic eth0, wlan0, etc.)
+echo -e "${NOTE} Configuring network interface naming... ${RESET}"
+
+udev_rule="/etc/udev/rules.d/80-net-setup-link.rules"
+
+if [ -L "$udev_rule" ] && [ "$(readlink -f "$udev_rule")" = "/dev/null" ]; then
+    echo -e "${OK} Network interface naming already configured. Skipping... ${RESET}"
+else
+    echo -e "${CAT} Disabling predictable network interface naming... ${RESET}"
+    sudo ln -sf /dev/null "$udev_rule"
+    if [ -L "$udev_rule" ]; then
+        echo -e "${OK} Predictable network interface naming disabled. ${RESET}"
+        echo -e "${WARN} A reboot is required for changes to take effect. ${RESET}"
+    else
+        echo -e "${ERROR} Failed to create udev rule. ${RESET}"
+        exit 1
+    fi
+fi

@@ -9,6 +9,7 @@ import { PopupWindow, PopupButton } from "../popup"
 type MemoryUsage = { percentage: number; total: number; used: number }
 type DiskUsage = { percentage: number; total: number; used: number }
 type CpuTime = { total: number; idle: number }
+type GpuStats = { available: boolean; usage: number; memUsed: number; memTotal: number; temp: number }
 
 const POPUP_NAME = "archlogo-popup"
 
@@ -26,6 +27,15 @@ const getCpuUsage = (): number => {
   lastCpuStats = { total, idle }
 
   return dtotal > 0 ? ((dtotal - didle) / dtotal) * 100 : 0
+}
+
+const getCpuTemp = (): number => {
+  try {
+    const temp = readFile("/sys/class/thermal/thermal_zone1/temp")
+    return Math.round(parseInt(temp.trim()) / 1000)
+  } catch {
+    return 0
+  }
 }
 
 const getMemoryUsage = (): MemoryUsage => {
@@ -64,6 +74,40 @@ const formatBytes = (bytes: number): string => {
   return `${mb.toFixed(0)} MB`
 }
 
+const formatMB = (mb: number): string => {
+  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
+  return `${mb} MB`
+}
+
+// Check if NVIDIA GPU is available (cached result)
+let gpuAvailable: boolean | null = null
+const checkGpuAvailable = async (): Promise<boolean> => {
+  if (gpuAvailable !== null) return gpuAvailable
+  try {
+    await execAsync("nvidia-smi --query-gpu=name --format=csv,noheader")
+    gpuAvailable = true
+  } catch {
+    gpuAvailable = false
+  }
+  return gpuAvailable
+}
+
+const getGpuStats = async (): Promise<GpuStats> => {
+  const notAvailable: GpuStats = { available: false, usage: 0, memUsed: 0, memTotal: 0, temp: 0 }
+
+  if (!(await checkGpuAvailable())) return notAvailable
+
+  try {
+    const result = await execAsync(
+      "nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits"
+    )
+    const [usage, memUsed, memTotal, temp] = result.trim().split(",").map(s => parseInt(s.trim()))
+    return { available: true, usage, memUsed, memTotal, temp }
+  } catch {
+    return notAvailable
+  }
+}
+
 export function ArchLogo() {
   return (
     <PopupButton popupName={POPUP_NAME} cssClasses={["arch-logo-widget"]}>
@@ -74,6 +118,7 @@ export function ArchLogo() {
 
 export function ArchLogoPopup() {
   const cpuPercent = createPoll(0, 2000, getCpuUsage)
+  const cpuTemp = createPoll(0, 2000, getCpuTemp)
   const memPercent = createPoll(0, 2000, () => getMemoryUsage().percentage)
   const diskPercent = createPoll(0, 10000, () => getDiskUsage().percentage)
 
@@ -92,6 +137,19 @@ export function ArchLogoPopup() {
       total: formatBytes(disk.total),
     }
   })
+
+  // GPU stats - only shown if GPU is detected
+  const defaultGpuStats: GpuStats = { available: false, usage: 0, memUsed: 0, memTotal: 0, temp: 0 }
+  const [gpuStats, setGpuStats] = createState<GpuStats>(defaultGpuStats)
+
+  const updateGpuStats = async () => {
+    const stats = await getGpuStats()
+    setGpuStats(stats)
+  }
+
+  // Initial GPU check and periodic polling
+  updateGpuStats()
+  setInterval(updateGpuStats, 2000)
 
   const [updateCount, setUpdateCount] = createState(0)
 
@@ -145,6 +203,38 @@ export function ArchLogoPopup() {
             <box
               cssClasses={["stat-bar-fill", "cpu-bar"]}
               css={cpuPercent.as(p => `min-width: ${Math.round(Math.max(2, p * 2))}px;`)}
+            />
+          </box>
+          <label
+            label={cpuTemp.as(t => `${t}°C`)}
+            cssClasses={["stat-detail"]}
+            halign={Gtk.Align.END}
+          />
+        </box>
+
+        {/* GPU Section - only shown if GPU is detected */}
+        <box
+          orientation={Gtk.Orientation.VERTICAL}
+          spacing={8}
+          visible={gpuStats.as(g => g.available)}
+        >
+          <box cssClasses={["separator"]} />
+          <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["stat-section"]}>
+            <box spacing={8}>
+              <Gtk.Image iconName="video-display-symbolic" cssClasses={["stat-icon"]} pixelSize={16} />
+              <label label="GPU" cssClasses={["stat-label"]} hexpand halign={Gtk.Align.START} />
+              <label label={gpuStats.as(g => `${g.usage}%`)} cssClasses={["stat-value"]} />
+            </box>
+            <box cssClasses={["stat-bar-bg"]}>
+              <box
+                cssClasses={["stat-bar-fill", "gpu-bar"]}
+                css={gpuStats.as(g => `min-width: ${Math.round(Math.max(2, g.usage * 2))}px;`)}
+              />
+            </box>
+            <label
+              label={gpuStats.as(g => `${formatMB(g.memUsed)} / ${formatMB(g.memTotal)} • ${g.temp}°C`)}
+              cssClasses={["stat-detail"]}
+              halign={Gtk.Align.END}
             />
           </box>
         </box>

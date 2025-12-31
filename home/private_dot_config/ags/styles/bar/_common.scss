@@ -1,0 +1,78 @@
+// Common bar styling - shared between TopBar and BottomBar
+// Change values here to update both bars at once
+
+$bar-bg: rgba(20, 20, 25, 0.6);
+$bar-radius: 16px;
+$bar-padding: 0px 2px;
+$bar-section-padding: 10px;
+
+$button-radius: 4px;
+$button-margin: 1px;
+$button-padding: 1px 3px;
+$button-hover-bg: rgba(255, 255, 255, 0.1);
+
+@mixin bar-base {
+  background: transparent;
+  color: white;
+  font-weight: 400;
+
+  > centerbox {
+    background: transparent;
+    margin: 0;
+    padding: 0;
+
+    > box {
+      background: transparent;
+      padding: $bar-padding;
+      margin: 0;
+    }
+  }
+
+  button {
+    border-radius: $button-radius;
+    margin: $button-margin;
+    padding: $button-padding;
+    background: transparent;
+    border: none;
+    transition: background-color 200ms;
+
+    &:hover {
+      background: $button-hover-bg;
+    }
+  }
+}
+
+// Mixin for a box section with background
+@mixin bar-section($position) {
+  background: $bar-bg;
+
+  @if $position == "start-top" {
+    border-radius: 0 0 $bar-radius 0;
+    padding-right: $bar-section-padding;
+  } @else if $position == "end-top" {
+    border-radius: 0 0 0 $bar-radius;
+    padding-left: $bar-section-padding;
+  } @else if $position == "center-top" {
+    border-radius: 0 0 $bar-radius $bar-radius;
+    padding-left: $bar-section-padding;
+    padding-right: $bar-section-padding;
+  } @else if $position == "start-bottom" {
+    border-radius: 0 $bar-radius 0 0;
+    padding-right: $bar-section-padding;
+  } @else if $position == "end-bottom" {
+    border-radius: $bar-radius 0 0 0;
+    padding-left: $bar-section-padding;
+  } @else if $position == "center-bottom" {
+    border-radius: $bar-radius $bar-radius 0 0;
+    padding-left: $bar-section-padding;
+    padding-right: $bar-section-padding;
+  } @else if $position == "only-bottom" {
+    border-radius: $bar-radius $bar-radius 0 0;
+    padding-left: $bar-section-padding;
+    padding-right: $bar-section-padding;
+  } @else if $position == "only-top" {
+    border-radius: 0 0 $bar-radius $bar-radius;
+    padding-left: $bar-section-padding;
+    padding-right: $bar-section-padding;
+  }
+}

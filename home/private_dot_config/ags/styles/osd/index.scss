@@ -1,0 +1,83 @@
+@use "../variables" as *;
+
+// OSD Window - positioned on the right side of screen
+.osd-window {
+  background: transparent;
+}
+
+.osd-container {
+  background: $popup-bg;
+  border: 1px solid $popup-border;
+  border-radius: 12px;
+  padding: 10px 8px;
+  box-shadow: $popup-shadow;
+  min-width: 40px;
+  min-height: 160px;
+}
+
+// Value display at top
+.osd-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-primary;
+  min-width: 28px;
+
+  &.muted {
+    color: $text-muted;
+  }
+}
+
+// Progress bar container
+.osd-progress-container {
+  padding: 4px 0;
+  min-height: 100px;
+}
+
+// Vertical level bar (progress indicator)
+.osd-level {
+  min-width: 4px;
+  border-radius: 2px;
+
+  // GTK4 LevelBar structure
+  trough {
+    min-width: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+
+    block {
+      border-radius: 2px;
+
+      &.filled {
+        background: $accent-primary;
+      }
+
+      &.empty {
+        background: transparent;
+      }
+    }
+  }
+
+  &.muted {
+    trough block.filled {
+      background: $text-muted;
+    }
+  }
+}
+
+// Icon container at bottom
+.osd-icon-container {
+  padding: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+// Icon styling using Material Symbols
+.osd-icon {
+  font-family: "Material Symbols Rounded";
+  font-size: 20px;
+  color: $accent-primary;
+
+  &.muted {
+    color: $text-muted;
+  }
+}

@@ -8,20 +8,34 @@ import { WifiPopup } from "./modules/wifi"
 import { PowerPopup } from "./modules/powermenu"
 import { AgendaPopup } from "./modules/agenda"
 import { SettingsPopup } from "./modules/settings"
+import { OSD, triggerVolumeOSD, triggerBrightnessOSD } from "./modules/osd"
+import { NotificationPopup } from "./modules/notification"
 
 app.start({
   css: style,
-  // This is the clean fix:
-  requestHandler(request: string, res: (response: any) => void) {
-    if (request === "quit") {
+  requestHandler(request: string | string[], res: (response: any) => void) {
+    // request is an array of arguments
+    const cmd = Array.isArray(request) ? request[0] : request
+
+    if (cmd === "quit") {
       app.quit()
       return res("Quitting...")
     }
 
-    // You can add logic here to reload CSS or toggle windows
-    if (request === "ping") return res("pong")
+    if (cmd === "ping") return res("pong")
 
-    res(`Unknown request: ${request}`)
+    // OSD triggers - called from Hyprland keybinds
+    if (cmd === "osd-volume") {
+      triggerVolumeOSD()
+      return res("ok")
+    }
+
+    if (cmd === "osd-brightness") {
+      triggerBrightnessOSD()
+      return res("ok")
+    }
+
+    res(`Unknown request: ${cmd}`)
   },
   main() {
     app.get_monitors().forEach((monitor, index) => TopBar(monitor, index))
@@ -33,5 +47,7 @@ app.start({
     PowerPopup()
     AgendaPopup()
     SettingsPopup()
+    OSD()
+    NotificationPopup()
   },
 })

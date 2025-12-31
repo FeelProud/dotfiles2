@@ -187,3 +187,46 @@ $mic-color: $accent-primary;
     color: $text-muted;
   }
 }
+
+// Color mode toggle styles
+.color-mode-buttons {
+  padding: 2px;
+}
+
+.color-mode-btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid $separator-color;
+  transition: all 150ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  &.active {
+    background: rgba($accent-color, 0.2);
+    border-color: $accent-color;
+
+    label {
+      color: $text-primary;
+    }
+
+    image {
+      color: $accent-color;
+    }
+  }
+
+  label {
+    font-size: 12px;
+    color: $text-secondary;
+  }
+
+  image {
+    color: $text-secondary;
+  }
+}

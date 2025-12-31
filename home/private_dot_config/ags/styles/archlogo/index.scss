@@ -35,6 +35,10 @@ $stats-color-alt: $accent-secondary;
   background: $stats-color;
 }
 
+.gpu-bar {
+  background: $stats-color;
+}
+
 .system-stats-menu {
   min-width: 220px;
 }

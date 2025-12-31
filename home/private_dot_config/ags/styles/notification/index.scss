@@ -1,0 +1,125 @@
+@use "../variables" as *;
+
+// Notification popup window - appears at top center when new notification arrives
+.notification-popup-window {
+  background: transparent;
+}
+
+// Wrapper button for click-to-dismiss
+.notification-popup-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+// Main container
+.notification-popup-container {
+  background: $popup-bg;
+  border: 1px solid $popup-border;
+  border-radius: $popup-border-radius;
+  padding: 14px 16px;
+  box-shadow: $popup-shadow;
+  min-width: 340px;
+}
+
+// Icon container
+.notification-popup-icon-container {
+  min-width: 48px;
+  min-height: 48px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0;
+
+  image {
+    border-radius: 8px;
+  }
+}
+
+// App name label
+.notification-popup-app {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+// Time label
+.notification-popup-time {
+  font-size: 10px;
+  color: $text-muted;
+}
+
+// Summary/title
+.notification-popup-summary {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+// Body text
+.notification-popup-body {
+  font-size: 12px;
+  color: $text-secondary;
+  line-height: 1.4;
+}
+
+// Actions container
+.notification-popup-actions {
+  margin-top: 4px;
+}
+
+// Action buttons
+.notification-popup-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  color: $text-primary;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  &:active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+// Close button
+.notification-popup-close {
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px;
+  min-width: 24px;
+  min-height: 24px;
+  opacity: 0.5;
+  transition: all 150ms ease;
+  margin-top: -8px;
+  margin-right: -8px;
+
+  &:hover {
+    opacity: 1;
+    background: rgba(255, 80, 80, 0.3);
+
+    .notification-popup-close-icon {
+      color: #ff5050;
+    }
+  }
+}
+
+// Close icon
+.notification-popup-close-icon {
+  font-family: "Material Symbols Rounded";
+  font-size: 16px;
+  color: $text-secondary;
+}
