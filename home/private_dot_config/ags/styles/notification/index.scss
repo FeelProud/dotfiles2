@@ -1,11 +1,9 @@
 @use "../variables" as *;
 
-// Notification popup window - appears at top center when new notification arrives
 .notification-popup-window {
   background: transparent;
 }
 
-// Wrapper button for click-to-dismiss
 .notification-popup-button {
   background: transparent;
   border: none;
@@ -17,7 +15,6 @@
   }
 }
 
-// Main container
 .notification-popup-container {
   background: $popup-bg;
   border: 1px solid $popup-border;
@@ -27,7 +24,6 @@
   min-width: 340px;
 }
 
-// Icon container
 .notification-popup-icon-container {
   min-width: 48px;
   min-height: 48px;
@@ -40,7 +36,6 @@
   }
 }
 
-// App name label
 .notification-popup-app {
   font-size: 11px;
   font-weight: 600;
@@ -49,32 +44,27 @@
   letter-spacing: 0.3px;
 }
 
-// Time label
 .notification-popup-time {
   font-size: 10px;
   color: $text-muted;
 }
 
-// Summary/title
 .notification-popup-summary {
   font-size: 14px;
   font-weight: 600;
   color: $text-primary;
 }
 
-// Body text
 .notification-popup-body {
   font-size: 12px;
   color: $text-secondary;
   line-height: 1.4;
 }
 
-// Actions container
 .notification-popup-actions {
   margin-top: 4px;
 }
 
-// Action buttons
 .notification-popup-action-btn {
   background: rgba(255, 255, 255, 0.1);
   border: none;
@@ -94,7 +84,6 @@
   }
 }
 
-// Close button
 .notification-popup-close {
   background: transparent;
   border: none;
@@ -117,9 +106,59 @@
   }
 }
 
-// Close icon
 .notification-popup-close-icon {
   font-family: "Material Symbols Rounded";
   font-size: 16px;
   color: $text-secondary;
+}
+
+$popup-bg-light: rgba(255, 255, 255, 0.9);
+$popup-border-light: rgba(0, 0, 0, 0.1);
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+
+window.light-mode {
+  .notification-popup-container {
+    background: $popup-bg-light;
+    border-color: $popup-border-light;
+  }
+
+  .notification-popup-icon-container {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .notification-popup-app {
+    color: $text-secondary-light;
+  }
+
+  .notification-popup-time {
+    color: $text-muted-light;
+  }
+
+  .notification-popup-summary {
+    color: $text-primary-light;
+  }
+
+  .notification-popup-body {
+    color: $text-secondary-light;
+  }
+
+  .notification-popup-action-btn {
+    background: rgba(0, 0, 0, 0.06);
+    color: $text-primary-light;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      background: rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .notification-popup-close-icon {
+    color: $text-secondary-light;
+  }
 }

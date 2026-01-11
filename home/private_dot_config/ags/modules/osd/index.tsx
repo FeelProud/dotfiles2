@@ -3,8 +3,9 @@ import { Astal, Gtk } from "ags/gtk4"
 import { Accessor, createState } from "ags"
 import { execAsync, subprocess } from "ags/process"
 import Wp from "gi://AstalWp"
+import { setupWindowTheme } from "../utils/theme"
+import { checkAudioReady, onAudioReady } from "../utils/audio"
 
-// OSD types
 type OSDType = "volume" | "brightness"
 
 interface OSDState {
@@ -14,7 +15,6 @@ interface OSDState {
   muted?: boolean
 }
 
-// State management
 const [osdState, setOsdState] = createState<OSDState>({
   visible: false,
   type: "volume",
@@ -23,28 +23,14 @@ const [osdState, setOsdState] = createState<OSDState>({
 })
 
 let hideTimeout: ReturnType<typeof setTimeout> | null = null
-const HIDE_DELAY = 1500 // ms
-let lastOSDType: OSDType | null = null
+const HIDE_DELAY = 1500
 
 function showOSD(type: OSDType, value: number, muted = false) {
-  // Clear existing timeout
-  if (hideTimeout) {
-    clearTimeout(hideTimeout)
-  }
-
-  // Track the type for proper switching
-  lastOSDType = type
-
-  // Show OSD with new values
+  if (hideTimeout) clearTimeout(hideTimeout)
   setOsdState({ visible: true, type, value, muted })
-
-  // Auto-hide after delay
-  hideTimeout = setTimeout(() => {
-    setOsdState((prev) => ({ ...prev, visible: false }))
-  }, HIDE_DELAY)
+  hideTimeout = setTimeout(() => setOsdState((prev) => ({ ...prev, visible: false })), HIDE_DELAY)
 }
 
-// Exported functions for external triggers (called via ags request)
 export async function triggerVolumeOSD() {
   const wp = Wp.get_default()
   const speaker = wp?.audio?.defaultSpeaker
@@ -56,15 +42,11 @@ export async function triggerVolumeOSD() {
 }
 
 export async function triggerBrightnessOSD() {
-  // Small delay to ensure brightnessctl has finished writing
   await new Promise((resolve) => setTimeout(resolve, 10))
   const brightness = await getBrightnessValue()
-  if (brightness >= 0) {
-    showOSD("brightness", brightness)
-  }
+  if (brightness >= 0) showOSD("brightness", brightness)
 }
 
-// Helper to get brightness (defined here to be available for export)
 async function getBrightnessValue(): Promise<number> {
   try {
     const result = await execAsync("brightnessctl get")
@@ -75,39 +57,30 @@ async function getBrightnessValue(): Promise<number> {
   }
 }
 
-// Audio setup
 const wp = Wp.get_default()
 const audio = wp?.audio
 
-let isAudioReady = false
 let lastVolume = -1
 let lastMuted = false
 let startupGracePeriod = true
 
-// Ignore volume changes during startup grace period
 setTimeout(() => {
   startupGracePeriod = false
 }, 2000)
 
 if (wp) {
   if (wp.audio?.defaultSpeaker) {
-    isAudioReady = true
     lastVolume = Math.round((wp.audio.defaultSpeaker.volume || 0) * 100)
     lastMuted = wp.audio.defaultSpeaker.mute ?? false
   }
 
-  wp.connect("ready", () => {
-    isAudioReady = true
+  onAudioReady(() => {
     if (audio?.defaultSpeaker) {
       lastVolume = Math.round((audio.defaultSpeaker.volume || 0) * 100)
       lastMuted = audio.defaultSpeaker.mute ?? false
-      setupVolumeMonitor()
     }
-  })
-
-  if (isAudioReady) {
     setupVolumeMonitor()
-  }
+  })
 }
 
 function setupVolumeMonitor() {
@@ -118,13 +91,8 @@ function setupVolumeMonitor() {
   let muteId: number | null = null
 
   const connectSpeaker = () => {
-    // Disconnect old listeners
-    if (volumeId !== null && currentSpeaker) {
-      currentSpeaker.disconnect(volumeId)
-    }
-    if (muteId !== null && currentSpeaker) {
-      currentSpeaker.disconnect(muteId)
-    }
+    if (volumeId !== null && currentSpeaker) currentSpeaker.disconnect(volumeId)
+    if (muteId !== null && currentSpeaker) currentSpeaker.disconnect(muteId)
 
     currentSpeaker = audio.defaultSpeaker
     if (!currentSpeaker) return
@@ -150,16 +118,13 @@ function setupVolumeMonitor() {
   audio.connect("notify::default-speaker", connectSpeaker)
 }
 
-// Brightness monitoring
 let lastBrightness = -1
 let isSettingBrightness = false
 
-// Initialize and monitor brightness
 getBrightnessValue().then((v) => {
   if (v >= 0) lastBrightness = v
 })
 
-// Track if brightness was recently set via settings slider
 export function markBrightnessSettingStart() {
   isSettingBrightness = true
 }
@@ -173,9 +138,7 @@ export function markBrightnessSettingEnd() {
 subprocess(
   ["bash", "-c", "udevadm monitor --subsystem-match=backlight"],
   async () => {
-    // Skip during startup grace period
     if (startupGracePeriod) return
-    // Skip if being set via settings (avoid duplicate OSD)
     if (isSettingBrightness) return
 
     const brightness = await getBrightnessValue()
@@ -186,22 +149,18 @@ subprocess(
   }
 )
 
-// Get appropriate icon based on type and value
 function getIcon(type: OSDType, value: number, muted = false): string {
   if (type === "brightness") {
     if (value <= 33) return "brightness_low"
     if (value <= 66) return "brightness_medium"
     return "brightness_high"
   }
-
-  // Volume icons
   if (muted || value === 0) return "volume_off"
   if (value <= 33) return "volume_mute"
   if (value <= 66) return "volume_down"
   return "volume_up"
 }
 
-// OSD Window Component
 export function OSD() {
   const visible = new Accessor(
     () => osdState.peek().visible,
@@ -223,6 +182,10 @@ export function OSD() {
     (callback) => osdState.subscribe(callback)
   )
 
+  const setup = (win: Gtk.Window) => {
+    setupWindowTheme(win)
+  }
+
   return (
     <window
       name="osd"
@@ -233,15 +196,13 @@ export function OSD() {
       layer={Astal.Layer.OVERLAY}
       application={app}
       marginRight={20}
+      $={setup}
     >
       <box cssClasses={["osd-container"]} orientation={Gtk.Orientation.VERTICAL} spacing={8}>
-        {/* Value display */}
         <label
           cssClasses={isMuted.as((m) => (m ? ["osd-value", "muted"] : ["osd-value"]))}
           label={value.as((v) => `${v}`)}
         />
-
-        {/* Progress bar container */}
         <box cssClasses={["osd-progress-container"]} vexpand halign={Gtk.Align.CENTER}>
           <Gtk.LevelBar
             cssClasses={isMuted.as((m) => (m ? ["osd-level", "muted"] : ["osd-level"]))}
@@ -253,8 +214,6 @@ export function OSD() {
             vexpand
           />
         </box>
-
-        {/* Icon */}
         <box cssClasses={["osd-icon-container"]} halign={Gtk.Align.CENTER} valign={Gtk.Align.CENTER}>
           <label
             cssClasses={isMuted.as((m) => (m ? ["osd-icon", "muted"] : ["osd-icon"]))}

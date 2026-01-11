@@ -11,7 +11,6 @@ $net-color: $accent-primary;
   padding: 10px;
 }
 
-// Header
 .net-header {
   padding: 0 2px;
   margin-bottom: 4px;
@@ -54,7 +53,6 @@ $net-color: $accent-primary;
   }
 }
 
-// Section styling
 .net-section {
   padding: 0;
 }
@@ -75,7 +73,6 @@ $net-color: $accent-primary;
   letter-spacing: 0.5px;
 }
 
-// Switch styling (scoped to net-menu)
 .net-menu switch {
   min-width: 36px;
   min-height: 18px;
@@ -96,7 +93,6 @@ $net-color: $accent-primary;
   }
 }
 
-// Network items (wired status, wifi networks)
 .net-item {
   padding: 6px 8px;
   border-radius: 6px;
@@ -149,7 +145,6 @@ $net-color: $accent-primary;
   color: $text-muted;
 }
 
-// Wired status display (non-button)
 .net-status {
   padding: 6px 8px;
   border-radius: 6px;
@@ -191,7 +186,6 @@ $net-color: $accent-primary;
   color: $text-muted;
 }
 
-// Scan icon button (in header)
 .net-menu .scan-icon-btn {
   padding: 4px;
   border-radius: 4px;
@@ -237,13 +231,15 @@ $net-color: $accent-primary;
   margin: 4px 0;
 }
 
-// Access point list
-.net-ap-list {
-  padding: 0;
+.net-ap-scroll {
   margin-top: 4px;
+  min-height: 32px;
 }
 
-// Inline password entry
+.net-ap-list {
+  padding: 0;
+}
+
 .wifi-password-inline {
   padding: 8px 4px 4px 4px;
 }
@@ -299,7 +295,26 @@ $net-color: $accent-primary;
   }
 }
 
-// Password entry field
+.wifi-enterprise-badge {
+  font-size: 9px;
+  font-weight: 600;
+  color: $net-color;
+  background: rgba($net-color, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.wifi-enterprise-badge-small {
+  font-size: 8px;
+  font-weight: 600;
+  color: $net-color;
+  background: rgba($net-color, 0.15);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
 .wifi-password-inline entry {
   padding: 8px 10px;
   border-radius: 6px;
@@ -316,5 +331,207 @@ $net-color: $accent-primary;
   image {
     color: $text-muted;
     padding: 0 4px;
+  }
+}
+
+
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+$active-bg-light: rgba(0, 0, 0, 0.1);
+$separator-color-light: rgba(0, 0, 0, 0.1);
+
+window.light-mode {
+  .net-menu {
+    * {
+      color: $text-primary-light;
+    }
+  }
+
+  .net-header image {
+    color: $text-secondary-light;
+  }
+
+  .net-title {
+    color: $text-primary-light;
+  }
+
+  .net-settings-btn {
+    image {
+      color: $text-muted-light;
+    }
+
+    &:hover {
+      background: $hover-bg-light;
+
+      image {
+        color: $text-secondary-light;
+      }
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+  }
+
+  .net-section-header image {
+    color: $text-muted-light;
+  }
+
+  .net-section-title {
+    color: $text-secondary-light;
+  }
+
+  .net-menu switch {
+    background: rgba(0, 0, 0, 0.1);
+
+    &:checked {
+      background: $net-color;
+    }
+  }
+
+  .net-item {
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    &.connected {
+      background: rgba($net-color, 0.15);
+
+      .net-item-name {
+        color: $text-primary-light;
+      }
+    }
+
+    &.disconnected {
+      .net-item-name {
+        color: $text-muted-light;
+      }
+
+      image {
+        color: $text-muted-light;
+      }
+    }
+
+    image {
+      color: $text-muted-light;
+    }
+  }
+
+  .net-item-name {
+    color: $text-secondary-light;
+  }
+
+  .net-item-detail {
+    color: $text-muted-light;
+  }
+
+  .net-status {
+    &.connected {
+      background: rgba($net-color, 0.15);
+
+      .net-status-label {
+        color: $text-primary-light;
+      }
+    }
+
+    &.disconnected {
+      .net-status-label {
+        color: $text-muted-light;
+      }
+
+      image {
+        color: $text-muted-light;
+      }
+    }
+
+    image {
+      color: $text-muted-light;
+    }
+  }
+
+  .net-status-label {
+    color: $text-secondary-light;
+  }
+
+  .net-status-detail {
+    color: $text-muted-light;
+  }
+
+  .net-menu .scan-icon-btn {
+    image {
+      color: $text-muted-light;
+    }
+
+    &:hover {
+      background: $hover-bg-light;
+
+      image {
+        color: $text-secondary-light;
+      }
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+  }
+
+  .separator {
+    background: $separator-color-light;
+  }
+
+  .wifi-password-title {
+    color: $text-primary-light;
+  }
+
+  .wifi-password-btn {
+    background: rgba(0, 0, 0, 0.06);
+
+    label {
+      color: $text-secondary-light;
+    }
+
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    &.suggested {
+      background: rgba($net-color, 0.3);
+
+      label {
+        color: white;
+      }
+
+      &:hover {
+        background: rgba($net-color, 0.4);
+      }
+
+      &:active {
+        background: rgba($net-color, 0.5);
+      }
+    }
+  }
+
+  .wifi-password-inline entry {
+    border-color: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.04);
+    color: $text-primary-light;
+
+    &:focus {
+      border-color: $net-color;
+    }
+
+    image {
+      color: $text-muted-light;
+    }
   }
 }

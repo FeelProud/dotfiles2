@@ -47,6 +47,14 @@ $mic-color: $accent-primary;
   color: $text-primary;
 }
 
+.settings-row {
+  padding: 2px 0;
+
+  image {
+    color: $text-primary;
+  }
+}
+
 .settings-value {
   font-size: 12px;
   font-weight: 400;
@@ -95,7 +103,7 @@ $mic-color: $accent-primary;
   highlight {
     min-height: 5px;
     border-radius: 2px;
-    background: $accent-color;
+    background: $accent-primary;
   }
 
   slider {
@@ -116,6 +124,12 @@ $mic-color: $accent-primary;
       background: $mic-color;
     }
   }
+
+  &.night-mode-slider {
+    highlight {
+      background: $accent-primary;
+    }
+  }
 }
 
 .separator {
@@ -124,7 +138,6 @@ $mic-color: $accent-primary;
   margin: 6px 0;
 }
 
-// Device selector styles
 .device-selector {
   margin-top: 6px;
   padding: 6px;
@@ -159,22 +172,22 @@ $mic-color: $accent-primary;
   transition: background 150ms ease;
 
   &:hover {
-    background: $hover-bg;
+    background: rgba($accent-primary, 0.15);
   }
 
   &:active {
-    background: $active-bg;
+    background: rgba($accent-primary, 0.25);
   }
 
   &.selected {
-    background: rgba($speaker-color, 0.15);
+    background: rgba($accent-primary, 0.15);
 
     label {
       color: $text-primary;
     }
 
     image {
-      color: $speaker-color;
+      color: $accent-primary;
     }
   }
 
@@ -188,12 +201,13 @@ $mic-color: $accent-primary;
   }
 }
 
-// Color mode toggle styles
-.color-mode-buttons {
+.color-mode-buttons,
+.theme-buttons {
   padding: 2px;
 }
 
-.color-mode-btn {
+.color-mode-btn,
+.theme-btn {
   padding: 8px 12px;
   border-radius: 6px;
   background: transparent;
@@ -228,5 +242,239 @@ $mic-color: $accent-primary;
 
   image {
     color: $text-secondary;
+  }
+}
+
+
+.accent-color-section {
+  padding: 4px 0;
+}
+
+.color-preview {
+  min-width: 20px;
+  min-height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.color-presets {
+  padding: 8px 0;
+}
+
+.color-preset-btn {
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 6px;
+  border: 2px solid transparent;
+  padding: 0;
+  transition: all 150ms ease;
+
+  &:hover {
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  &.selected {
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.custom-color-row {
+  padding-top: 4px;
+}
+
+.color-entry {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: $text-primary;
+  min-height: 28px;
+
+  &:focus {
+    border-color: $accent-primary;
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.apply-color-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: rgba($accent-primary, 0.2);
+  border: 1px solid rgba($accent-primary, 0.3);
+  min-height: 28px;
+
+  &:hover {
+    background: rgba($accent-primary, 0.3);
+  }
+
+  &:active {
+    background: rgba($accent-primary, 0.4);
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: $text-primary;
+  }
+}
+
+
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+$active-bg-light: rgba(0, 0, 0, 0.1);
+$separator-color-light: rgba(0, 0, 0, 0.1);
+
+window.light-mode {
+  .settings-menu {
+    * {
+      color: $text-primary-light;
+    }
+  }
+
+  .section-title image,
+  .settings-header image {
+    color: $text-secondary-light;
+  }
+
+  .section-title-label,
+  .settings-label {
+    color: $text-primary-light;
+  }
+
+  .settings-row image {
+    color: $text-primary-light;
+  }
+
+  .settings-value {
+    color: $text-secondary-light;
+  }
+
+  .icon-button {
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    image {
+      color: $text-primary-light;
+    }
+  }
+
+  .settings-slider trough {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .separator {
+    background: $separator-color-light;
+  }
+
+  .device-selector {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .selector-header image {
+    color: $text-secondary-light;
+  }
+
+  .selector-label {
+    color: $text-secondary-light;
+  }
+
+  .selector-item {
+    &:hover {
+      background: rgba($accent-primary, 0.15);
+    }
+
+    &:active {
+      background: rgba($accent-primary, 0.25);
+    }
+
+    &.selected {
+      background: rgba($accent-primary, 0.15);
+    }
+
+    label {
+      color: $text-secondary-light;
+    }
+
+    image {
+      color: $text-muted-light;
+    }
+  }
+
+  .color-mode-btn,
+  .theme-btn {
+    border-color: $separator-color-light;
+
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    &.active {
+      background: rgba(0, 0, 0, 0.1);
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    label {
+      color: $text-secondary-light;
+    }
+
+    image {
+      color: $text-secondary-light;
+    }
+  }
+
+  .color-preview {
+    border-color: rgba(0, 0, 0, 0.2);
+  }
+
+  .color-preset-btn {
+    &:hover {
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    &.selected {
+      border-color: rgba(0, 0, 0, 0.8);
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .color-entry {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+    color: $text-primary-light;
+
+    &:focus {
+      background: rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  .apply-color-btn {
+    background: rgba($accent-primary, 0.15);
+    border-color: rgba($accent-primary, 0.25);
+
+    &:hover {
+      background: rgba($accent-primary, 0.25);
+    }
+
+    &:active {
+      background: rgba($accent-primary, 0.35);
+    }
+
+    label {
+      color: $text-primary-light;
+    }
   }
 }

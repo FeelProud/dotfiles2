@@ -3,9 +3,11 @@ import { Accessor, For, createState } from "ags"
 import { execAsync } from "ags/process"
 import AstalBluetooth from "gi://AstalBluetooth"
 import { PopupWindow, PopupButton } from "../popup"
+import { createModuleLogger } from "../utils/logger"
 
-// Track if we're currently toggling to prevent feedback loops
-const [isToggling, setIsToggling] = createState(false)
+const logger = createModuleLogger("Bluetooth")
+
+const [connectingDevice, setConnectingDevice] = createState<string | null>(null)
 
 const POPUP_NAME = "bluetooth-popup"
 const bluetooth = AstalBluetooth.get_default()
@@ -35,7 +37,9 @@ export function Bluetooth() {
   )
 }
 
-function DeviceItem({ device }: { device: AstalBluetooth.Device }) {
+function DeviceItem({ device, enabled }: { device: AstalBluetooth.Device; enabled: Accessor<boolean> }) {
+  const deviceAddress = device.address
+
   const getDeviceIcon = (dev: AstalBluetooth.Device): string => {
     const icon = dev.icon || "bluetooth"
     if (icon.includes("audio-headset") || icon.includes("headset")) return "audio-headphones-symbolic"
@@ -48,11 +52,29 @@ function DeviceItem({ device }: { device: AstalBluetooth.Device }) {
     return "bluetooth-symbolic"
   }
 
+  const isConnecting = connectingDevice.as(addr => addr === deviceAddress)
+  const isSensitive = new Accessor(
+    () => enabled.peek() && connectingDevice.peek() === null,
+    (callback) => {
+      const unsub1 = enabled.subscribe(callback)
+      const unsub2 = connectingDevice.subscribe(callback)
+      return () => { unsub1(); unsub2() }
+    }
+  )
+
   const toggleConnection = async () => {
+    if (connectingDevice.peek() !== null) return
+
     if (device.connected) {
       device.disconnect_device(() => {})
     } else {
-      device.connect_device(() => {})
+      setConnectingDevice(deviceAddress)
+      device.connect_device(() => setConnectingDevice(null))
+      setTimeout(() => {
+        if (connectingDevice.peek() === deviceAddress) {
+          setConnectingDevice(null)
+        }
+      }, 15000)
     }
   }
 
@@ -60,10 +82,12 @@ function DeviceItem({ device }: { device: AstalBluetooth.Device }) {
     <button
       cssClasses={["bt-device"]}
       onClicked={toggleConnection}
+      sensitive={isSensitive}
       $={(btn: Gtk.Button) => {
         const update = () => {
           if (device.connected) {
             btn.add_css_class("connected")
+            if (connectingDevice.peek() === deviceAddress) setConnectingDevice(null)
           } else {
             btn.remove_css_class("connected")
           }
@@ -82,16 +106,25 @@ function DeviceItem({ device }: { device: AstalBluetooth.Device }) {
           halign={Gtk.Align.START}
           ellipsize={3}
         />
+        <label
+          label="progress_activity"
+          cssClasses={["bar-icon", "spinning"]}
+          visible={isConnecting}
+        />
         <Gtk.Image
           iconName="object-select-symbolic"
           pixelSize={12}
           $={(img: Gtk.Image) => {
             const update = () => {
-              img.visible = device.connected
+              img.visible = device.connected && connectingDevice.peek() !== deviceAddress
             }
             update()
             const id = device.connect("notify::connected", update)
-            img.connect("destroy", () => device.disconnect(id))
+            const unsub = connectingDevice.subscribe(update)
+            img.connect("destroy", () => {
+              device.disconnect(id)
+              unsub()
+            })
           }}
         />
       </box>
@@ -146,16 +179,10 @@ export function BluetoothPopup() {
   )
 
   const toggleBluetooth = async (enable: boolean) => {
-    if (isToggling.peek()) return
-    setIsToggling(true)
-
     try {
-      // Use bluetoothctl which handles rfkill automatically
       await execAsync(["bluetoothctl", "power", enable ? "on" : "off"])
     } catch (e) {
       console.error("Failed to toggle bluetooth:", e)
-    } finally {
-      setIsToggling(false)
     }
   }
 
@@ -171,39 +198,28 @@ export function BluetoothPopup() {
 
   const openBluetoothSettings = () => {
     execAsync("blueman-manager").catch(() => {
-      // Try GNOME Settings as fallback
-      execAsync("gnome-control-center bluetooth").catch(() => {})
+      execAsync("gnome-control-center bluetooth").catch((err) => {
+        logger.error("Failed to open bluetooth settings", err)
+      })
     })
   }
 
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={6} cssClasses={["bt-menu"]}>
-        {/* Header with toggle */}
         <box cssClasses={["bt-header"]} spacing={8}>
           <Gtk.Image iconName="bluetooth-symbolic" pixelSize={14} />
           <label cssClasses={["bt-title"]} label="Bluetooth" hexpand halign={Gtk.Align.START} />
           <button cssClasses={["bt-settings-btn"]} onClicked={openBluetoothSettings} tooltipText="Open Bluetooth Settings">
             <Gtk.Image iconName="emblem-system-symbolic" pixelSize={14} />
           </button>
-          {/* Scan button */}
           <button
             cssClasses={isScanning.as(s => s ? ["scan-icon-btn", "scanning"] : ["scan-icon-btn"])}
             onClicked={toggleScan}
             sensitive={enabled}
             tooltipText="Scan for devices"
           >
-            <box>
-              <Gtk.Spinner
-                spinning={isScanning}
-                visible={isScanning}
-              />
-              <Gtk.Image
-                iconName="view-refresh-symbolic"
-                pixelSize={14}
-                visible={isScanning.as(s => !s)}
-              />
-            </box>
+            <Gtk.Image iconName="view-refresh-symbolic" pixelSize={14} cssClasses={isScanning.as(s => s ? ["spinning"] : [])} />
           </button>
           <Gtk.Switch
             active={enabled}
@@ -217,12 +233,11 @@ export function BluetoothPopup() {
           />
         </box>
 
-        {/* Separator and device list */}
         <box cssClasses={["separator"]} visible={devices.as(d => d.length > 0)} />
 
         <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["bt-device-list"]} visible={devices.as(d => d.length > 0)}>
           <For each={devices}>
-            {(device) => <DeviceItem device={device} />}
+            {(device) => <DeviceItem device={device} enabled={enabled} />}
           </For>
         </box>
       </box>

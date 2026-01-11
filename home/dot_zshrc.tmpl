@@ -18,15 +18,6 @@ plugins=(
 
 source "$ZSH/oh-my-zsh.sh"
 
-# Fastfetch
-{{- if .personal }}
-fastfetch -c "$HOME/.config/fastfetch/config/config-perso.jsonc"
-{{- else if .work }}
-fastfetch -c "$HOME/.config/fastfetch/config/config-pro.jsonc"
-{{- else }}
-fastfetch
-{{- end }}
-
 # Aliases (eza with icons)
 alias ls='eza -a --icons'
 alias ll='eza -al --icons'

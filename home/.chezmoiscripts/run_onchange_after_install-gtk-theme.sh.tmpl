@@ -1,0 +1,21 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+THEME_DIR="$HOME/.themes"
+FLUENT_SRC="$HOME/.local/share/fluent-gtk-theme"
+
+if [ -d "$THEME_DIR/Fluent-Dark" ] && [ -d "$THEME_DIR/Fluent-Light" ]; then
+  echo -e "${OK} Fluent themes are already installed. Skipping..."
+else
+  echo -e "${NOTE} Installing Fluent GTK themes..."
+  cd "$FLUENT_SRC" && ./install.sh --color dark --color light
+  echo -e "${OK} Fluent-Dark and Fluent-Light themes installed."
+fi

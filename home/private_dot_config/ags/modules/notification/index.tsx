@@ -2,8 +2,9 @@ import app from "ags/gtk4/app"
 import { Astal, Gtk } from "ags/gtk4"
 import { Accessor, createState } from "ags"
 import Notifd from "gi://AstalNotifd"
+import { formatTimeAgo } from "../utils/time"
+import { setupWindowTheme } from "../utils/theme"
 
-// State for the notification popup
 interface NotificationPopupState {
   visible: boolean
   notification: Notifd.Notification | null
@@ -15,25 +16,14 @@ const [popupState, setPopupState] = createState<NotificationPopupState>({
 })
 
 let hideTimeout: ReturnType<typeof setTimeout> | null = null
-const DISPLAY_DURATION = 5000 // 5 seconds
+const DISPLAY_DURATION = 5000
 
-// Show notification popup
 function showNotificationPopup(notification: Notifd.Notification) {
-  // Clear existing timeout
-  if (hideTimeout) {
-    clearTimeout(hideTimeout)
-  }
-
-  // Show popup with new notification
+  if (hideTimeout) clearTimeout(hideTimeout)
   setPopupState({ visible: true, notification })
-
-  // Auto-hide after delay
-  hideTimeout = setTimeout(() => {
-    setPopupState((prev) => ({ ...prev, visible: false }))
-  }, DISPLAY_DURATION)
+  hideTimeout = setTimeout(() => setPopupState((prev) => ({ ...prev, visible: false })), DISPLAY_DURATION)
 }
 
-// Hide popup
 function hideNotificationPopup() {
   if (hideTimeout) {
     clearTimeout(hideTimeout)
@@ -42,29 +32,13 @@ function hideNotificationPopup() {
   setPopupState((prev) => ({ ...prev, visible: false }))
 }
 
-// Format time ago for notifications
-function formatTimeAgo(timestamp: number): string {
-  const now = Math.floor(Date.now() / 1000)
-  const diff = now - timestamp
-
-  if (diff < 60) return "Just now"
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
-  return `${Math.floor(diff / 86400)}d ago`
-}
-
-// Notifd setup - listen for new notifications
 const notifd = Notifd.get_default()
 
-// Listen for new notifications
 notifd.connect("notified", (_self, id: number) => {
   const notification = notifd.get_notification(id)
-  if (notification) {
-    showNotificationPopup(notification)
-  }
+  if (notification) showNotificationPopup(notification)
 })
 
-// Also hide popup when notification is resolved/dismissed
 notifd.connect("resolved", (_self, id: number) => {
   const currentNotification = popupState.peek().notification
   if (currentNotification && currentNotification.id === id) {
@@ -72,7 +46,6 @@ notifd.connect("resolved", (_self, id: number) => {
   }
 })
 
-// Notification popup window component
 export function NotificationPopup() {
   const visible = new Accessor(
     () => popupState.peek().visible,
@@ -112,6 +85,10 @@ export function NotificationPopup() {
     (callback) => popupState.subscribe(callback)
   )
 
+  const setup = (win: Gtk.Window) => {
+    setupWindowTheme(win)
+  }
+
   return (
     <window
       name="notification-popup"
@@ -122,13 +99,13 @@ export function NotificationPopup() {
       layer={Astal.Layer.OVERLAY}
       application={app}
       marginTop={50}
+      $={setup}
     >
       <button
         cssClasses={["notification-popup-button"]}
         onClicked={hideNotificationPopup}
       >
         <box cssClasses={["notification-popup-container"]} spacing={12}>
-          {/* App icon / image */}
           <box cssClasses={["notification-popup-icon-container"]} valign={Gtk.Align.START}>
             <Gtk.Image
               pixelSize={48}
@@ -155,7 +132,6 @@ export function NotificationPopup() {
             />
           </box>
 
-          {/* Content */}
           <box orientation={Gtk.Orientation.VERTICAL} spacing={4} hexpand>
             <box spacing={8}>
               <label
@@ -187,7 +163,6 @@ export function NotificationPopup() {
               wrap
               visible={hasBody}
             />
-            {/* Actions */}
             <box
               spacing={6}
               cssClasses={["notification-popup-actions"]}
@@ -196,7 +171,6 @@ export function NotificationPopup() {
               visible={hasActions}
               $={(actionsBox: Gtk.Box) => {
                 const updateActions = () => {
-                  // Clear existing children
                   let child = actionsBox.get_first_child()
                   while (child) {
                     const next = child.get_next_sibling()
@@ -226,7 +200,6 @@ export function NotificationPopup() {
             />
           </box>
 
-          {/* Close button */}
           <button
             cssClasses={["notification-popup-close"]}
             valign={Gtk.Align.START}

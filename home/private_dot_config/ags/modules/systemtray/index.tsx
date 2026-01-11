@@ -44,13 +44,10 @@ export function SystemTray() {
                 tooltipMarkup={tooltipMarkup}
                 menuModel={item.menuModel}
                 $={(btn: Gtk.MenuButton) => {
-                  // Insert action group for menu items to work
                   btn.insert_action_group("dbusmenu", item.actionGroup)
-
                   btn.connect("notify::active", () => {
                     if (btn.active) {
                       closeAllPopups()
-                      // Notify the app that menu is about to show
                       item.about_to_show()
                     }
                   })

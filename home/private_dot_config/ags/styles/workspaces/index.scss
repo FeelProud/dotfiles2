@@ -1,4 +1,5 @@
 $ws-primary: #ffffff;
+$ws-primary-light: rgba(0, 0, 0, 0.8);
 $ws-surface: rgba(0, 0, 0, 0.6);
 
 .ws-container {
@@ -53,6 +54,32 @@ $ws-surface: rgba(0, 0, 0, 0.6);
       padding: 2px 6px;
       font-size: 1em;
       font-weight: 400;
+    }
+  }
+}
+
+window.light-mode .ws-container {
+  .ws-wrapper.occupied {
+    border-top-color: $ws-primary-light;
+    border-bottom-color: $ws-primary-light;
+
+    &.group-start {
+      border-left-color: $ws-primary-light;
+    }
+
+    &.group-end {
+      border-right-color: $ws-primary-light;
+    }
+  }
+
+  button.ws-button {
+    .ws-button-label {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    &.focused .ws-button-label {
+      background-color: $ws-primary-light;
+      color: white;
     }
   }
 }

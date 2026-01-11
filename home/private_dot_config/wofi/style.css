@@ -1,0 +1,88 @@
+/* Wofi Style - Matching AGS theme */
+
+* {
+    font-family: "Ubuntu Nerd Font", "Ubuntu", sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* Main window */
+window {
+    background-color: rgba(30, 30, 30, 0.65);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Search box */
+#input {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 8px;
+    margin: 12px;
+    padding: 10px 14px;
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 14px;
+}
+
+#input:focus {
+    box-shadow: none;
+    border: none;
+}
+
+/* Outer box */
+#outer-box {
+    margin: 0 12px 12px 12px;
+}
+
+#scroll {
+    margin: 0;
+    padding: 0;
+}
+
+#inner-box {
+    margin: 0;
+    padding: 0;
+}
+
+/* Entry items - fixed size for 5 columns */
+#entry {
+    padding: 8px 4px;
+    margin: 2px;
+    border-radius: 8px;
+    background-color: transparent;
+}
+
+/* Force all entries to same width */
+#entry box {
+    min-width: 120px;
+    max-width: 120px;
+}
+
+/* Truncate long text */
+#text {
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0;
+}
+
+#entry:selected #text {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+/* Selected entry */
+#entry:selected {
+    background-color: rgba(155, 125, 212, 0.25);
+}
+
+/* Hover state */
+#entry:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#entry:selected:hover {
+    background-color: rgba(155, 125, 212, 0.3);
+}
+
+/* App icons */
+#img {
+    margin-right: 8px;
+}

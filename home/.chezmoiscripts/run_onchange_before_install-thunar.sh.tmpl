@@ -10,12 +10,13 @@ YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
 thunar=(
-  thunar 
-  thunar-volman 
+  thunar
+  thunar-volman
   tumbler
   ffmpegthumbnailer
   thunar-archive-plugin
   xarchiver
+  papirus-icon-theme
 )
 
 install_package() {
@@ -45,3 +46,4 @@ for THUNAR in "${thunar[@]}"; do
      echo -e "\e[1A\e[K${ERROR} - $THUNAR Package installation failed, Please check the installation logs"
   fi
 done
+

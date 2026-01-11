@@ -52,3 +52,38 @@
     }
   }
 }
+
+
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+$active-bg-light: rgba(0, 0, 0, 0.1);
+
+window.light-mode {
+  .power-menu .power-option {
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    .power-icon {
+      color: $text-muted-light;
+    }
+
+    label:not(.power-icon) {
+      color: $text-secondary-light;
+    }
+
+    &:hover .power-icon {
+      color: $text-secondary-light;
+    }
+
+    &:hover label:not(.power-icon) {
+      color: $text-primary-light;
+    }
+  }
+}

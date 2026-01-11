@@ -1,31 +1,30 @@
 import { Gtk } from "ags/gtk4"
 import { Accessor, For, createState } from "ags"
 import { execAsync } from "ags/process"
+import { writeFileAsync } from "ags/file"
 import AstalNetwork from "gi://AstalNetwork?version=0.1"
+import GLib from "gi://GLib"
 import { PopupWindow, PopupButton, getPopupState } from "../popup"
+import { isValidBssid, isValidSsid, escapeForKeyfile } from "../utils/network"
+import { createModuleLogger } from "../utils/logger"
+
+const logger = createModuleLogger("WiFi")
 
 const POPUP_NAME = "network-popup"
 const network = AstalNetwork.get_default()
 
-// Validate BSSID format (MAC address: XX:XX:XX:XX:XX:XX)
-// BSSIDs are inherently safe - only hex chars and colons
-function isValidBssid(bssid: string): boolean {
-  return /^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/.test(bssid)
-}
-
-// Global state for tracking which BSSID is currently connecting
 const [connectingBssid, setConnectingBssid] = createState<string | null>(null)
-
-// Global state for password dialog
 const [passwordDialogAp, setPasswordDialogAp] = createState<{ bssid: string; ssid: string } | null>(null)
 const [passwordError, setPasswordError] = createState<string | null>(null)
-
-// Reset password dialog when popup closes
+const [enterpriseDialogAp, setEnterpriseDialogAp] = createState<{ bssid: string; ssid: string } | null>(null)
+const [enterpriseError, setEnterpriseError] = createState<string | null>(null)
 const [popupVisible] = getPopupState(POPUP_NAME)
 popupVisible.subscribe(() => {
   if (!popupVisible.peek()) {
     setPasswordDialogAp(null)
     setPasswordError(null)
+    setEnterpriseDialogAp(null)
+    setEnterpriseError(null)
   }
 })
 
@@ -35,12 +34,10 @@ export function Wifi() {
 
   const networkIcon = new Accessor(
     () => {
-      // Check wired first - only show ethernet icon if actually connected
       const wiredState = wired?.state
       if (wiredState === AstalNetwork.DeviceState.ACTIVATED) {
         return "settings_ethernet"
       }
-      // Then check wifi
       if (!wifi?.enabled) return "wifi_off"
       if (wifi?.internet === AstalNetwork.Internet.CONNECTED) {
         const strength = wifi?.strength || 0
@@ -90,25 +87,149 @@ function closePasswordDialog() {
   setPasswordError(null)
 }
 
+function openEnterpriseDialog(bssid: string, ssid: string) {
+  setEnterpriseError(null)
+  setEnterpriseDialogAp({ bssid, ssid })
+}
+
+function closeEnterpriseDialog() {
+  setEnterpriseDialogAp(null)
+  setEnterpriseError(null)
+}
+
+function isEnterpriseNetwork(ap: AstalNetwork.AccessPoint): boolean {
+  const FLAG_8021X = 0x200
+  return ((ap.rsnFlags ?? 0) & FLAG_8021X) !== 0 || ((ap.wpaFlags ?? 0) & FLAG_8021X) !== 0
+}
+
+async function connectWithEnterprise(
+  bssid: string,
+  ssid: string,
+  username: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!isValidBssid(bssid)) {
+    return { success: false, error: "Invalid network" }
+  }
+  if (!isValidSsid(ssid)) {
+    return { success: false, error: "Invalid network name" }
+  }
+
+  const tmpDir = GLib.get_tmp_dir()
+  const tmpFile = `${tmpDir}/nm-enterprise-${GLib.uuid_string_random()}.conf`
+  const safeSsid = escapeForKeyfile(ssid)
+  const safeUsername = escapeForKeyfile(username)
+  const safePassword = escapeForKeyfile(password)
+
+  try {
+    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch((err) => {
+      logger.warn(`Could not delete existing connection: ${err}`)
+    })
+
+    const keyfileContent = `[connection]
+id=${safeSsid}
+type=wifi
+
+[wifi]
+ssid=${safeSsid}
+mode=infrastructure
+
+[wifi-security]
+key-mgmt=wpa-eap
+
+[802-1x]
+eap=peap;
+identity=${safeUsername}
+password=${safePassword}
+phase2-auth=mschapv2
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+`
+    await writeFileAsync(tmpFile, keyfileContent)
+    await execAsync(["chmod", "600", tmpFile])
+    await execAsync(["nmcli", "connection", "load", tmpFile])
+    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
+      logger.warn(`Could not delete temp file: ${err}`)
+    })
+    await execAsync(["nmcli", "--wait", "30", "connection", "up", ssid])
+
+    return { success: true }
+  } catch (err: unknown) {
+    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
+      logger.warn(`Could not delete temp file: ${err}`)
+    })
+    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch((err) => {
+      logger.warn(`Could not delete existing connection: ${err}`)
+    })
+
+    const errorMsg = err instanceof Error ? err.message : String(err)
+    let friendlyError = errorMsg
+
+    if (errorMsg.includes("Secrets were required") || errorMsg.includes("authentication")) {
+      friendlyError = "Authentication failed"
+    } else if (errorMsg.includes("No network with SSID")) {
+      friendlyError = "Network not found"
+    } else if (errorMsg.includes("Connection activation failed")) {
+      friendlyError = "Connection failed"
+    }
+
+    return { success: false, error: friendlyError }
+  }
+}
+
 async function connectWithPassword(bssid: string, ssid: string, password: string): Promise<{ success: boolean; error?: string }> {
   if (!isValidBssid(bssid)) {
     return { success: false, error: "Invalid network" }
   }
+  if (!isValidSsid(ssid)) {
+    return { success: false, error: "Invalid network name" }
+  }
+
+  const tmpDir = GLib.get_tmp_dir()
+  const tmpFile = `${tmpDir}/nm-wifi-${GLib.uuid_string_random()}.conf`
+  const safeSsid = escapeForKeyfile(ssid)
+  const safePassword = escapeForKeyfile(password)
 
   try {
-    // Connect using nmcli with BSSID (safe - only hex and colons)
-    // If nmcli returns successfully, the connection was established
-    await execAsync([
-      "nmcli", "--wait", "30", "device", "wifi", "connect", bssid,
-      "password", password
-    ])
+    const keyfileContent = `[connection]
+id=${safeSsid}
+type=wifi
 
-    // nmcli succeeded, connection is established
+[wifi]
+ssid=${safeSsid}
+mode=infrastructure
+bssid=${bssid}
+
+[wifi-security]
+key-mgmt=wpa-psk
+psk=${safePassword}
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+`
+    await writeFileAsync(tmpFile, keyfileContent)
+    await execAsync(["chmod", "600", tmpFile])
+    await execAsync(["nmcli", "connection", "load", tmpFile])
+    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
+      logger.warn(`Could not delete temp file: ${err}`)
+    })
+    await execAsync(["nmcli", "--wait", "30", "connection", "up", ssid])
+
     return { success: true }
-
   } catch (err: unknown) {
-    // Delete the failed connection
-    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch(() => {})
+    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
+      logger.warn(`Could not delete temp file: ${err}`)
+    })
+    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch((err) => {
+      logger.warn(`Could not delete existing connection: ${err}`)
+    })
 
     const errorMsg = err instanceof Error ? err.message : String(err)
     let friendlyError = errorMsg
@@ -129,11 +250,9 @@ async function hasSavedConnection(bssid: string): Promise<boolean> {
   if (!isValidBssid(bssid)) return false
 
   try {
-    // Check if there's a saved connection for this BSSID
     const connections = await execAsync([
       "nmcli", "-t", "-f", "NAME,TYPE", "connection", "show"
     ])
-    // Also check the BSSID in connection details
     const wifiConnections = connections.split("\n")
       .filter(line => line.includes("wireless"))
       .map(line => line.split(":")[0])
@@ -168,17 +287,14 @@ async function connectToKnownNetwork(bssid: string): Promise<{ success: boolean;
   }
 
   try {
-    // Try to connect using BSSID (safe - only hex and colons)
     await execAsync(["nmcli", "--wait", "30", "device", "wifi", "connect", bssid])
 
-    // Verify connection by checking active BSSID
     const activeBssid = await execAsync([
       "nmcli", "-t", "-f", "BSSID", "device", "wifi", "show-password"
     ]).catch(() => "")
 
     return { success: activeBssid.toLowerCase().includes(bssid.toLowerCase()), hasSaved: true }
   } catch {
-    // Connection failed but we have saved credentials - might be temporary issue
     return { success: false, hasSaved: true }
   }
 }
@@ -188,7 +304,6 @@ function InlinePasswordEntry() {
   const [isConnecting, setIsConnecting] = createState(false)
   let entryRef: Gtk.PasswordEntry | null = null
 
-  // Reset password when dialog closes
   passwordDialogAp.subscribe(() => {
     if (!passwordDialogAp.peek()) {
       setPasswordText("")
@@ -237,7 +352,6 @@ function InlinePasswordEntry() {
       setPasswordText(entry.get_text())
       setPasswordError(null)
     })
-    // Auto-focus when mounted
     setTimeout(() => entry.grab_focus(), 50)
   }
 
@@ -285,7 +399,148 @@ function InlinePasswordEntry() {
           sensitive={passwordText.as(p => p.length >= 8)}
         >
           <box spacing={4}>
-            <Gtk.Spinner spinning={isConnecting} visible={isConnecting} />
+            <label label="progress_activity" cssClasses={["bar-icon", "spinning"]} visible={isConnecting} />
+            <label label="Connect" />
+          </box>
+        </button>
+      </box>
+    </box>
+  )
+}
+
+function InlineEnterpriseEntry() {
+  const [usernameText, setUsernameText] = createState("")
+  const [passwordText, setPasswordText] = createState("")
+  const [isConnecting, setIsConnecting] = createState(false)
+  let usernameRef: Gtk.Entry | null = null
+  let passwordRef: Gtk.PasswordEntry | null = null
+
+  enterpriseDialogAp.subscribe(() => {
+    if (!enterpriseDialogAp.peek()) {
+      setUsernameText("")
+      setPasswordText("")
+      if (usernameRef) usernameRef.set_text("")
+      if (passwordRef) passwordRef.set_text("")
+    }
+  })
+
+  const canConnect = new Accessor(
+    () => usernameText.peek().length > 0 && passwordText.peek().length > 0,
+    (callback) => {
+      const unsub1 = usernameText.subscribe(callback)
+      const unsub2 = passwordText.subscribe(callback)
+      return () => { unsub1(); unsub2() }
+    }
+  )
+
+  const handleConnect = async () => {
+    const dialogAp = enterpriseDialogAp.peek()
+    const username = usernameText.peek()
+    const password = passwordText.peek()
+    if (!dialogAp || !username || !password) return
+
+    setIsConnecting(true)
+    setConnectingBssid(dialogAp.bssid)
+
+    const result = await connectWithEnterprise(dialogAp.bssid, dialogAp.ssid, username, password)
+
+    setIsConnecting(false)
+    setConnectingBssid(null)
+
+    if (result.success) {
+      closeEnterpriseDialog()
+    } else {
+      setEnterpriseError(result.error || "Connection failed")
+    }
+  }
+
+  const handleCancel = () => {
+    closeEnterpriseDialog()
+    setUsernameText("")
+    setPasswordText("")
+    if (usernameRef) usernameRef.set_text("")
+    if (passwordRef) passwordRef.set_text("")
+  }
+
+  const setupUsernameEntry = (entry: Gtk.Entry) => {
+    usernameRef = entry
+    entry.connect("changed", () => {
+      setUsernameText(entry.get_text())
+      setEnterpriseError(null)
+    })
+    entry.connect("activate", () => {
+      passwordRef?.grab_focus()
+    })
+    setTimeout(() => entry.grab_focus(), 50)
+  }
+
+  const setupPasswordEntry = (entry: Gtk.PasswordEntry) => {
+    passwordRef = entry
+    entry.connect("changed", () => {
+      setPasswordText(entry.get_text())
+      setEnterpriseError(null)
+    })
+    entry.connect("activate", () => {
+      if (canConnect.peek()) {
+        handleConnect()
+      }
+    })
+  }
+
+  return (
+    <box
+      orientation={Gtk.Orientation.VERTICAL}
+      spacing={8}
+      cssClasses={["wifi-password-inline"]}
+      visible={enterpriseDialogAp.as(ap => ap !== null)}
+    >
+      <box cssClasses={["separator"]} />
+      <box spacing={8}>
+        <Gtk.Image iconName="network-wireless-encrypted-symbolic" pixelSize={16} />
+        <label
+          label={enterpriseDialogAp.as(ap => ap ? `Connect to ${ap.ssid}` : "")}
+          cssClasses={["wifi-password-title"]}
+          hexpand
+          halign={Gtk.Align.START}
+          ellipsize={3}
+        />
+        <label
+          label="Enterprise"
+          cssClasses={["wifi-enterprise-badge"]}
+        />
+      </box>
+      <Gtk.Entry
+        placeholderText="Username"
+        hexpand
+        $={setupUsernameEntry}
+      />
+      <Gtk.PasswordEntry
+        showPeekIcon
+        placeholderText="Password"
+        hexpand
+        $={setupPasswordEntry}
+      />
+      <label
+        label={enterpriseError.as(e => e || "")}
+        cssClasses={["wifi-password-error"]}
+        visible={enterpriseError.as(e => e !== null)}
+        halign={Gtk.Align.START}
+      />
+      <box spacing={8} halign={Gtk.Align.END}>
+        <button
+          cssClasses={["wifi-password-btn"]}
+          onClicked={handleCancel}
+          sensitive={isConnecting.as(c => !c)}
+        >
+          <label label="Cancel" />
+        </button>
+        <button
+          cssClasses={["wifi-password-btn", "suggested"]}
+          onClicked={handleConnect}
+          sensitive={canConnect}
+        >
+          <box spacing={4}>
+            <label label="progress_activity" cssClasses={["bar-icon", "spinning"]} visible={isConnecting} />
             <label label="Connect" />
           </box>
         </button>
@@ -300,6 +555,9 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
   const strength = ap?.strength ?? 0
   const isActive = activeApSsid.as(activeSsid => activeSsid === ap?.ssid)
   const isConnecting = connectingBssid.as(connecting => connecting === bssid)
+  const isOpenNetwork = ap?.flags === 0 && ap?.wpaFlags === 0 && ap?.rsnFlags === 0
+  const actuallyRequiresPassword = ap?.requiresPassword && !isOpenNetwork
+  const isEnterprise = isEnterpriseNetwork(ap)
 
   const getStrengthIcon = (strength: number): string => {
     if (strength >= 80) return "network-wireless-signal-excellent-symbolic"
@@ -310,49 +568,32 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
   }
 
   const connectToAp = async () => {
-    // Don't connect if already connected, already connecting, or invalid ap
     if (!ap) return
     if (activeApSsid.peek() === ap.ssid) return
     if (connectingBssid.peek() !== null) return
     if (!bssid || !isValidBssid(bssid)) return
 
-    if (ap.requiresPassword) {
-      // First try saved connection
-      setConnectingBssid(bssid)
+    closePasswordDialog()
+    closeEnterpriseDialog()
+    setConnectingBssid(bssid)
 
-      const result = await connectToKnownNetwork(bssid)
-
-      if (result.success) {
-        setConnectingBssid(null)
-        return
-      }
-
-      // If we have saved credentials but connection failed, just stop the spinner
-      // Don't show error or ask for password - user can retry
-      if (result.hasSaved) {
-        setConnectingBssid(null)
-        return
-      }
-
+    try {
+      await execAsync(["nmcli", "--wait", "10", "device", "wifi", "connect", bssid])
       setConnectingBssid(null)
+      return
+    } catch {}
 
-      // No saved connection, show password dialog inline
-      openPasswordDialog(bssid, ssid)
-    } else {
-      // Open network
-      setConnectingBssid(bssid)
-      ap.activate(null, null)
+    setConnectingBssid(null)
 
-      // Wait a bit for connection, then clear state
-      setTimeout(() => {
-        if (connectingBssid.peek() === bssid) {
-          setConnectingBssid(null)
-        }
-      }, 10000)
+    if (ap.requiresPassword) {
+      if (isEnterprise) {
+        openEnterpriseDialog(bssid, ssid)
+      } else {
+        openPasswordDialog(bssid, ssid)
+      }
     }
   }
 
-  // Combined state for CSS classes
   const cssClasses = new Accessor(
     () => {
       const classes = ["net-item"]
@@ -385,21 +626,27 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
           halign={Gtk.Align.START}
           ellipsize={3}
         />
-        {/* Lock icon for password-protected networks (when not connected/connecting) */}
         <Gtk.Image
           iconName="network-wireless-encrypted-symbolic"
           pixelSize={12}
           visible={isActive.as(active => {
             const connecting = connectingBssid.peek() === bssid
-            return ap?.requiresPassword && !active && !connecting
+            return actuallyRequiresPassword && !isEnterprise && !active && !connecting
           })}
         />
-        {/* Spinner when connecting */}
-        <Gtk.Spinner
-          spinning={isConnecting}
+        <label
+          label="802.1X"
+          cssClasses={["wifi-enterprise-badge-small"]}
+          visible={isActive.as(active => {
+            const connecting = connectingBssid.peek() === bssid
+            return isEnterprise && !active && !connecting
+          })}
+        />
+        <label
+          label="progress_activity"
+          cssClasses={["bar-icon", "spinning"]}
           visible={isConnecting}
         />
-        {/* Checkmark when connected */}
         <Gtk.Image
           iconName="object-select-symbolic"
           pixelSize={12}
@@ -459,7 +706,6 @@ export function WifiPopup() {
     }
   )
 
-  // Clear connecting state when connection is established
   activeApSsid.subscribe(() => {
     const currentlyConnecting = connectingBssid.peek()
     const nowActive = activeApSsid.peek()
@@ -474,7 +720,6 @@ export function WifiPopup() {
       const seen = new Set<string>()
       return wifi.accessPoints
         .filter(ap => {
-          // Skip null/invalid access points
           if (!ap || !ap.ssid || seen.has(ap.ssid)) return false
           seen.add(ap.ssid)
           return true
@@ -487,7 +732,6 @@ export function WifiPopup() {
           }
           return (b.strength ?? 0) - (a.strength ?? 0)
         })
-        .slice(0, 8)
     },
     (callback) => {
       if (!wifi) return () => {}
@@ -507,7 +751,9 @@ export function WifiPopup() {
 
   const openNetworkSettings = () => {
     execAsync("nm-connection-editor").catch(() => {
-      execAsync("gnome-control-center network").catch(() => {})
+      execAsync("gnome-control-center network").catch((err) => {
+        logger.error("Failed to open network settings", err)
+      })
     })
   }
 
@@ -537,13 +783,22 @@ export function WifiPopup() {
     return state === AstalNetwork.DeviceState.ACTIVATED
   }
 
-  const toggleWired = () => {
+  const toggleWired = async () => {
     const state = wiredState.peek()
-    if (state === AstalNetwork.DeviceState.ACTIVATED) {
-      execAsync("nmcli device disconnect $(nmcli -t -f DEVICE,TYPE device | grep ethernet | cut -d: -f1 | head -1)").catch(() => {})
-    } else if (state === AstalNetwork.DeviceState.DISCONNECTED) {
-      execAsync("nmcli device connect $(nmcli -t -f DEVICE,TYPE device | grep ethernet | cut -d: -f1 | head -1)").catch(() => {})
-    }
+    try {
+      const deviceOutput = await execAsync(["nmcli", "-t", "-f", "DEVICE,TYPE", "device"])
+      const ethernetLine = deviceOutput.split("\n").find(line => line.includes(":ethernet"))
+      if (!ethernetLine) return
+
+      const deviceName = ethernetLine.split(":")[0]
+      if (!deviceName || !/^[a-zA-Z0-9_-]+$/.test(deviceName)) return
+
+      if (state === AstalNetwork.DeviceState.ACTIVATED) {
+        await execAsync(["nmcli", "device", "disconnect", deviceName])
+      } else if (state === AstalNetwork.DeviceState.DISCONNECTED) {
+        await execAsync(["nmcli", "device", "connect", deviceName])
+      }
+    } catch {}
   }
 
   const canToggleWired = (state: AstalNetwork.DeviceState): boolean => {
@@ -553,7 +808,6 @@ export function WifiPopup() {
   return (
     <PopupWindow name={POPUP_NAME} position="top-right">
       <box orientation={Gtk.Orientation.VERTICAL} spacing={6} cssClasses={["net-menu"]}>
-        {/* Header */}
         <box cssClasses={["net-header"]} spacing={8}>
           <Gtk.Image iconName="network-transmit-receive-symbolic" pixelSize={14} />
           <label cssClasses={["net-title"]} label="Network" hexpand halign={Gtk.Align.START} />
@@ -562,7 +816,6 @@ export function WifiPopup() {
           </button>
         </box>
 
-        {/* Wired Section */}
         {wired && (
           <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["net-section"]}>
             <box cssClasses={["net-section-header"]} spacing={6}>
@@ -571,7 +824,7 @@ export function WifiPopup() {
               <Gtk.Switch
                 active={wiredState.as(s => isWiredConnected(s))}
                 sensitive={wiredState.as(s => canToggleWired(s))}
-                onNotify:active={toggleWired}
+                onNotify:active={() => { toggleWired() }}
               />
             </box>
             <box
@@ -604,29 +857,17 @@ export function WifiPopup() {
 
         <box cssClasses={["separator"]} />
 
-        {/* WiFi Section */}
         <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["net-section"]}>
           <box cssClasses={["net-section-header"]} spacing={6}>
             <Gtk.Image iconName="network-wireless-symbolic" pixelSize={12} />
             <label cssClasses={["net-section-title"]} label="Wi-Fi" hexpand halign={Gtk.Align.START} />
-            {/* Scan button */}
             <button
               cssClasses={isScanning.as(s => s ? ["scan-icon-btn", "scanning"] : ["scan-icon-btn"])}
               onClicked={toggleScan}
               sensitive={wifiEnabled}
               tooltipText="Scan for networks"
             >
-              <box>
-                <Gtk.Spinner
-                  spinning={isScanning}
-                  visible={isScanning}
-                />
-                <Gtk.Image
-                  iconName="view-refresh-symbolic"
-                  pixelSize={14}
-                  visible={isScanning.as(s => !s)}
-                />
-              </box>
+              <Gtk.Image iconName="view-refresh-symbolic" pixelSize={14} cssClasses={isScanning.as(s => s ? ["spinning"] : [])} />
             </button>
             <Gtk.Switch
               active={wifiEnabled}
@@ -638,15 +879,23 @@ export function WifiPopup() {
             />
           </box>
 
-          {/* Access point list */}
-          <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["net-ap-list"]} visible={accessPoints.as(aps => aps.length > 0)}>
-            <For each={accessPoints}>
-              {(ap) => <AccessPointItem ap={ap} activeApSsid={activeApSsid} />}
-            </For>
-          </box>
+          <Gtk.ScrolledWindow
+            cssClasses={["net-ap-scroll"]}
+            hscrollbarPolicy={Gtk.PolicyType.NEVER}
+            vscrollbarPolicy={Gtk.PolicyType.AUTOMATIC}
+            propagateNaturalHeight
+            maxContentHeight={256}
+            visible={accessPoints.as(aps => aps.length > 0)}
+          >
+            <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["net-ap-list"]}>
+              <For each={accessPoints}>
+                {(ap) => <AccessPointItem ap={ap} activeApSsid={activeApSsid} />}
+              </For>
+            </box>
+          </Gtk.ScrolledWindow>
 
-          {/* Inline password entry */}
           <InlinePasswordEntry />
+          <InlineEnterpriseEntry />
         </box>
       </box>
     </PopupWindow>

@@ -1,8 +1,8 @@
-// Common bar styling - shared between TopBar and BottomBar
-// Change values here to update both bars at once
 
-$bar-bg: rgba(20, 20, 25, 0.6);
+$bar-bg: rgba(50, 50, 55, 0.75);
+$bar-bg-light: rgba(255, 255, 255, 0.85);
 $bar-radius: 16px;
+$bar-border: none;
 $bar-padding: 0px 2px;
 $bar-section-padding: 10px;
 
@@ -10,6 +10,7 @@ $button-radius: 4px;
 $button-margin: 1px;
 $button-padding: 1px 3px;
 $button-hover-bg: rgba(255, 255, 255, 0.1);
+$button-hover-bg-light: rgba(0, 0, 0, 0.08);
 
 @mixin bar-base {
   background: transparent;
@@ -25,6 +26,13 @@ $button-hover-bg: rgba(255, 255, 255, 0.1);
       background: transparent;
       padding: $bar-padding;
       margin: 0;
+
+      &.empty-section {
+        background: transparent;
+        padding: 0;
+        min-width: 0;
+        min-height: 0;
+      }
     }
   }
 
@@ -40,38 +48,74 @@ $button-hover-bg: rgba(255, 255, 255, 0.1);
       background: $button-hover-bg;
     }
   }
+
+  &.light-mode {
+    color: rgba(0, 0, 0, 0.9);
+
+    * {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    label {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    button:hover {
+      background: $button-hover-bg-light;
+    }
+
+    > centerbox > box {
+      background: $bar-bg-light;
+
+      &.empty-section {
+        background: transparent;
+      }
+    }
+  }
 }
 
-// Mixin for a box section with background
 @mixin bar-section($position) {
   background: $bar-bg;
+  border: $bar-border;
 
   @if $position == "start-top" {
     border-radius: 0 0 $bar-radius 0;
+    border-top: none;
+    border-left: none;
     padding-right: $bar-section-padding;
   } @else if $position == "end-top" {
     border-radius: 0 0 0 $bar-radius;
+    border-top: none;
+    border-right: none;
     padding-left: $bar-section-padding;
   } @else if $position == "center-top" {
     border-radius: 0 0 $bar-radius $bar-radius;
+    border-top: none;
     padding-left: $bar-section-padding;
     padding-right: $bar-section-padding;
   } @else if $position == "start-bottom" {
     border-radius: 0 $bar-radius 0 0;
+    border-bottom: none;
+    border-left: none;
     padding-right: $bar-section-padding;
   } @else if $position == "end-bottom" {
     border-radius: $bar-radius 0 0 0;
+    border-bottom: none;
+    border-right: none;
     padding-left: $bar-section-padding;
   } @else if $position == "center-bottom" {
     border-radius: $bar-radius $bar-radius 0 0;
+    border-bottom: none;
     padding-left: $bar-section-padding;
     padding-right: $bar-section-padding;
   } @else if $position == "only-bottom" {
     border-radius: $bar-radius $bar-radius 0 0;
+    border-bottom: none;
     padding-left: $bar-section-padding;
     padding-right: $bar-section-padding;
   } @else if $position == "only-top" {
     border-radius: 0 0 $bar-radius $bar-radius;
+    border-top: none;
     padding-left: $bar-section-padding;
     padding-right: $bar-section-padding;
   }

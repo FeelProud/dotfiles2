@@ -1,0 +1,31 @@
+# Wofi configuration
+# Two-column app launcher with icons
+
+show=drun
+prompt=Search
+
+# Fixed size
+width=750
+height=500
+
+# Five columns
+columns=5
+
+# Icons
+allow_images=true
+image_size=48
+
+# Search behavior
+insensitive=true
+matching=contains
+
+# Appearance
+hide_scroll=true
+no_actions=true
+allow_markup=true
+
+# Layer for blur
+layer=overlay
+
+# Terminal
+term=kitty

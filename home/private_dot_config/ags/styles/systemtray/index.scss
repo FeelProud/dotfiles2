@@ -18,7 +18,6 @@
   margin: 0 4px;
 }
 
-// Style the system tray popover menu to match popup style
 .system-tray-item {
   popover,
   popover.background,
@@ -49,7 +48,6 @@
       opacity: 0;
     }
 
-    // Menu items styling
     modelbutton,
     button.model {
       padding: 8px 12px;
@@ -67,14 +65,12 @@
       }
     }
 
-    // Separator in menu
     separator {
       min-height: 1px;
       background: $separator-color;
       margin: 4px 8px;
     }
 
-    // Submenu indicators
     .arrow {
       color: $text-secondary;
     }

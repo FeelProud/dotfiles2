@@ -1,17 +1,17 @@
 import app from "ags/gtk4/app"
 import { Astal, Gtk, Gdk } from "ags/gtk4"
 import { Workspaces } from "../workspaces"
-import { LocalIP, RemoteIP } from "../ip"
-import { ArchLogo } from "../archlogo"
+import { LocalIP, RemoteIP } from "../network-info"
+import { ArchLogo } from "../system-monitor"
 import { SystemTray } from "../systemtray"
 import { PowerButton } from "../powermenu"
-import { Agenda } from "../agenda"
-import { Battery } from "../battery"
+import { Agenda } from "../quick-menu"
+import { Battery } from "../power-control"
 import { Wifi } from "../wifi"
 import { Bluetooth } from "../bluetooth"
-import { Settings } from "../settings"
+import { Audio, Appearance } from "../settings"
 
-export function TopBar(gdkmonitor: Gdk.Monitor, index: number) {
+export function TopBar(gdkmonitor: Gdk.Monitor, index: string | number) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
 
   return (
@@ -36,8 +36,9 @@ export function TopBar(gdkmonitor: Gdk.Monitor, index: number) {
           <SystemTray />
           <Wifi />
           <Bluetooth />
+          <Audio />
+          <Appearance />
           <Battery />
-          <Settings />
           <PowerButton />
         </box>
       </centerbox>
@@ -45,7 +46,7 @@ export function TopBar(gdkmonitor: Gdk.Monitor, index: number) {
   )
 }
 
-export function BottomBar(gdkmonitor: Gdk.Monitor, index: number) {
+export function BottomBar(gdkmonitor: Gdk.Monitor, index: string | number) {
   const { BOTTOM, LEFT, RIGHT } = Astal.WindowAnchor
 
   return (
@@ -59,8 +60,8 @@ export function BottomBar(gdkmonitor: Gdk.Monitor, index: number) {
       application={app}
     >
       <centerbox cssName="centerbox">
-        <box $type="start" halign={Gtk.Align.START} />
-        <box $type="center" halign={Gtk.Align.CENTER} />
+        <box $type="start" halign={Gtk.Align.START} cssClasses={["empty-section"]} />
+        <box $type="center" halign={Gtk.Align.CENTER} cssClasses={["empty-section"]} />
         <box $type="end" halign={Gtk.Align.END} spacing={4}>
           <LocalIP />
           <RemoteIP />

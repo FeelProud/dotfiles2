@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Kali Linux-style Thunar Custom Actions adapted for Arch Linux
+-->
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1767285766889212-1</unique-id>
+	<command>kitty --working-directory %f</command>
+	<description>Open a terminal in the selected directory</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>folder</icon>
+	<name>Open Thunar as Root</name>
+	<submenu></submenu>
+	<unique-id>1665821504561824-4</unique-id>
+	<command>pkexec thunar %f</command>
+	<description>Open the selected directory as root in Thunar</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>accessories-text-editor</icon>
+	<name>Edit as Root</name>
+	<submenu></submenu>
+	<unique-id>1711958560105116-1</unique-id>
+	<command>pkexec nano %f</command>
+	<description>Edit file as root</description>
+	<range></range>
+	<patterns>*</patterns>
+	<other-files/>
+	<text-files/>
+</action>
+<action>
+	<icon>package-x-generic</icon>
+	<name>Extract Here</name>
+	<submenu></submenu>
+	<unique-id>1406927955138667-14</unique-id>
+	<command>file-roller --extract-here %F</command>
+	<description>Extract archive in the current directory</description>
+	<range></range>
+	<patterns>*.7z;*.zip;*.ZIP;*.rar;*.RAR;*.iso;*.ISO;*.tar;*.TAR;*.gz;*.GZ;*.tar.bz2;*.TAR.BZ2;*.gzip;*.GZIP;*.tar.gz;*.TAR.GZ;*.tar.xz;*.TAR.XZ;*.tar.lz;*.TAR.LZ;*.tgz;*.tar.zst</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>package-x-generic</icon>
+	<name>Compress...</name>
+	<submenu></submenu>
+	<unique-id>1406927957138869-14</unique-id>
+	<command>file-roller --add %F</command>
+	<description>Compress selected files into an archive</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>edit-find</icon>
+	<name>Search Here</name>
+	<submenu></submenu>
+	<unique-id>1665821360522885-1</unique-id>
+	<command>catfish %f</command>
+	<description>Search the selected directory</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>dialog-information</icon>
+	<name>File Checksum</name>
+	<submenu></submenu>
+	<unique-id>1479219991020421-1</unique-id>
+	<command>kitty -e bash -c "echo '=== MD5 ===' &amp;&amp; md5sum '%f' &amp;&amp; echo &amp;&amp; echo '=== SHA1 ===' &amp;&amp; sha1sum '%f' &amp;&amp; echo &amp;&amp; echo '=== SHA256 ===' &amp;&amp; sha256sum '%f' &amp;&amp; echo &amp;&amp; read -n 1 -s -r -p 'Press any key to close...'"</command>
+	<description>Calculate checksum of the selected file</description>
+	<range></range>
+	<patterns>*</patterns>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>emblem-symbolic-link</icon>
+	<name>Create Symlink</name>
+	<submenu></submenu>
+	<unique-id>1633511628120021-1</unique-id>
+	<command>ln -s %f "%f (symlink)"</command>
+	<description>Create a symbolic link next to the original</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+	<other-files/>
+</action>
+<action>
+	<icon>distributor-logo-archlinux</icon>
+	<name>Install Package</name>
+	<submenu></submenu>
+	<unique-id>1686298669691492-1</unique-id>
+	<command>kitty -e bash -c "sudo pacman -U %F; read -n 1 -s -r -p 'Press any key to close...'"</command>
+	<description>Install a package using pacman</description>
+	<range>*</range>
+	<patterns>*.pkg.tar.zst;*.pkg.tar.xz</patterns>
+	<other-files/>
+</action>
+<action>
+	<icon>user-trash</icon>
+	<name>Shred Securely</name>
+	<submenu></submenu>
+	<unique-id>1681377439900829-1</unique-id>
+	<command>kitty -e bash -c "shred -fvuz %F; read -n 1 -s -r -p 'Press any key to close...'"</command>
+	<description>Securely delete file by overwriting before removal</description>
+	<range></range>
+	<patterns>*</patterns>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>edit-copy</icon>
+	<name>Copy Path</name>
+	<submenu></submenu>
+	<unique-id>1700000000000001-1</unique-id>
+	<command>echo -n %f | wl-copy</command>
+	<description>Copy the full path to clipboard</description>
+	<range></range>
+	<patterns>*</patterns>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>document-properties</icon>
+	<name>File Properties</name>
+	<submenu></submenu>
+	<unique-id>1700000000000002-1</unique-id>
+	<command>kitty -e bash -c "echo '=== File Info ===' &amp;&amp; file '%f' &amp;&amp; echo &amp;&amp; echo '=== Size ===' &amp;&amp; du -sh '%f' &amp;&amp; echo &amp;&amp; echo '=== Permissions ===' &amp;&amp; ls -lah '%f' &amp;&amp; echo &amp;&amp; read -n 1 -s -r -p 'Press any key to close...'"</command>
+	<description>Show detailed file properties</description>
+	<range></range>
+	<patterns>*</patterns>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>org.gnome.baobab</icon>
+	<name>Disk Usage</name>
+	<submenu></submenu>
+	<unique-id>1629596605486171-1</unique-id>
+	<command>kitty -e bash -c "du -sh '%f'/* 2&gt;/dev/null | sort -hr | head -20; read -n 1 -s -r -p 'Press any key to close...'"</command>
+	<description>Show disk usage of directory contents</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>applications-system</icon>
+	<name>Set as Wallpaper</name>
+	<submenu></submenu>
+	<unique-id>1700000000000003-1</unique-id>
+	<command>swww img %f</command>
+	<description>Set image as wallpaper (Hyprland/swww)</description>
+	<range></range>
+	<patterns>*.jpg;*.jpeg;*.png;*.gif;*.webp;*.bmp</patterns>
+	<image-files/>
+</action>
+</actions>

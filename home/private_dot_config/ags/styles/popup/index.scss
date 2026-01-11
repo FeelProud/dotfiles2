@@ -1,22 +1,35 @@
 @use "../variables" as *;
 
-// Fullscreen popup window (covers entire screen for click-outside-to-close)
 .popup-window-fullscreen {
   background-color: rgba(0, 0, 0, 0);
 
-  // Click catcher buttons - transparent areas that close popup on click
   .popup-click-catcher {
-    background-color: rgba(0, 0, 0, 0);
+    all: unset;
+    background-color: transparent;
+    background-image: none;
     border: none;
     outline: none;
+    outline-style: none;
     box-shadow: none;
     min-width: 0;
     min-height: 0;
     padding: 0;
     margin: 0;
+
+    &:hover,
+    &:active,
+    &:focus,
+    &:focus-visible,
+    &:checked {
+      all: unset;
+      background-color: transparent;
+      background-image: none;
+      border: none;
+      outline: none;
+      box-shadow: none;
+    }
   }
 
-  // Popup content styling (same as legacy .popup-window)
   .popup-content-wrapper {
     background: $popup-bg;
     border: 1px solid $popup-border;
@@ -27,7 +40,6 @@
   }
 }
 
-// Popup window styling (layer-shell windows with blur) - legacy
 .popup-window {
   background: transparent;
 
@@ -41,7 +53,6 @@
   }
 }
 
-// Popup trigger button styling
 .popup-trigger {
   background: transparent;
   border: none;
@@ -59,9 +70,6 @@
   }
 }
 
-// Global popover styling - transparent with blur effect
-// Note: Blur is handled by your compositor (Hyprland/Sway)
-// Make sure you have blur rules for GTK4 layer-shell popovers
 
 popover,
 popover.background {
@@ -80,7 +88,6 @@ popover.background {
     color: $text-primary;
   }
 
-  // Arrow styling (hide)
   > arrow,
   arrow {
     all: unset;
@@ -92,14 +99,12 @@ popover.background {
   }
 }
 
-// Global separator styling
 .separator {
   min-height: 1px;
   background: $separator-color;
   margin: 6px 0;
 }
 
-// Menubutton styling
 menubutton {
   background: transparent;
   border: none;
@@ -122,12 +127,10 @@ menubutton {
   }
 }
 
-// Common popup content styling
 .popup-content {
   min-width: 250px;
 }
 
-// Section headers in popups
 .popup-header {
   font-size: 0.9em;
   font-weight: bold;
@@ -137,7 +140,6 @@ menubutton {
   border-bottom: 1px solid $separator-color;
 }
 
-// Section titles (smaller)
 .popup-section-title {
   font-size: 0.8em;
   font-weight: 600;
@@ -147,14 +149,12 @@ menubutton {
   padding: 8px 0 4px 0;
 }
 
-// Separator lines
 .popup-separator {
   min-height: 1px;
   background: $separator-color;
   margin: 8px 0;
 }
 
-// List items in popups
 .popup-item {
   padding: 8px 12px;
   border-radius: 8px;
@@ -170,7 +170,6 @@ menubutton {
   }
 }
 
-// Buttons in popups
 .popup-button {
   padding: 8px 16px;
   border-radius: 8px;
@@ -190,7 +189,6 @@ menubutton {
   }
 }
 
-// Sliders in popups
 .popup-slider {
   scale {
     min-height: 20px;
@@ -219,7 +217,6 @@ menubutton {
   }
 }
 
-// Progress bars in popups
 .popup-progress {
   progressbar {
     min-height: 6px;
@@ -237,14 +234,12 @@ menubutton {
   }
 }
 
-// Icon styling in popups
 .popup-icon {
   color: $text-secondary;
   font-size: 1.2em;
   margin-right: 8px;
 }
 
-// Labels
 .popup-label {
   color: $text-primary;
 }
@@ -259,7 +254,6 @@ menubutton {
   font-size: 0.85em;
 }
 
-// Checkmarks for selected items
 .popup-checkmark {
   color: $accent-color;
   font-size: 1em;
@@ -271,7 +265,6 @@ menubutton {
   }
 }
 
-// Grid layouts in popups
 .popup-grid {
   > * {
     padding: 8px;
@@ -284,7 +277,6 @@ menubutton {
   }
 }
 
-// Toggle row styling (icon + label + switch)
 .popup-toggle-row {
   padding: 6px 8px;
   border-radius: 8px;
@@ -316,5 +308,132 @@ menubutton {
       background: white;
       margin: 2px;
     }
+  }
+}
+
+// ============================================
+// LIGHT MODE POPUP STYLES
+// ============================================
+
+$popup-bg-light: rgba(255, 255, 255, 0.9);
+$popup-border-light: rgba(0, 0, 0, 0.1);
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+$active-bg-light: rgba(0, 0, 0, 0.1);
+$separator-color-light: rgba(0, 0, 0, 0.1);
+
+window.light-mode {
+  &.popup-window-fullscreen .popup-content-wrapper,
+  &.popup-window .popup-content-wrapper,
+  .popup-content-wrapper {
+    background: $popup-bg-light;
+    border-color: $popup-border-light;
+    color: $text-primary-light;
+  }
+
+  .popup-trigger:hover {
+    background: $hover-bg-light;
+  }
+
+  .popup-trigger:active,
+  .popup-trigger:checked {
+    background: $active-bg-light;
+  }
+
+  popover > contents,
+  popover.background > contents,
+  popover contents {
+    background: $popup-bg-light;
+    border-color: $popup-border-light;
+    color: $text-primary-light;
+  }
+
+  .separator,
+  .popup-separator {
+    background: $separator-color-light;
+  }
+
+  .popup-header {
+    color: $text-primary-light;
+    border-bottom-color: $separator-color-light;
+  }
+
+  .popup-section-title {
+    color: $text-muted-light;
+  }
+
+  .popup-item:hover {
+    background: $hover-bg-light;
+  }
+
+  .popup-item.active,
+  .popup-item:checked {
+    background: $active-bg-light;
+  }
+
+  .popup-button {
+    background: $hover-bg-light;
+    border-color: $popup-border-light;
+    color: $text-primary-light;
+
+    &:hover {
+      background: $active-bg-light;
+      border-color: rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      background: rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .popup-slider scale trough {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .popup-progress progressbar > trough {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  .popup-icon {
+    color: $text-secondary-light;
+  }
+
+  .popup-label {
+    color: $text-primary-light;
+  }
+
+  .popup-label-secondary {
+    color: $text-secondary-light;
+  }
+
+  .popup-label-muted {
+    color: $text-muted-light;
+  }
+
+  .popup-grid > *:hover {
+    background: $hover-bg-light;
+  }
+
+  .popup-toggle-row:hover {
+    background: $hover-bg-light;
+  }
+
+  .popup-toggle-row switch {
+    background: rgba(0, 0, 0, 0.15);
+
+    &:checked {
+      background: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  menubutton > button:hover {
+    background: $hover-bg-light;
+  }
+
+  menubutton > button:active,
+  menubutton > button:checked {
+    background: $active-bg-light;
   }
 }

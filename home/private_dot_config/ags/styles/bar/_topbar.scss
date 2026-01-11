@@ -22,7 +22,7 @@ window.TopBar {
     transition: background-color 200ms;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.3);
     }
 
     button:hover {
@@ -35,5 +35,33 @@ window.TopBar {
     min-height: 16px;
     background-color: rgba(255, 255, 255, 0.2);
     margin: 0 4px;
+  }
+}
+
+window.TopBar.light-mode {
+  color: rgba(0, 0, 0, 0.9);
+
+  * {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  label {
+    color: rgba(0, 0, 0, 0.9);
+  }
+
+  > centerbox > box {
+    background: rgba(255, 255, 255, 0.85);
+  }
+
+  .bar-center-widget:hover {
+    background: rgba(0, 0, 0, 0.15);
+  }
+
+  .bar-separator {
+    background-color: rgba(0, 0, 0, 0.15);
+  }
+
+  button:hover {
+    background: rgba(0, 0, 0, 0.08);
   }
 }

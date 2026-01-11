@@ -11,7 +11,6 @@ $bt-color: $accent-primary;
   padding: 10px;
 }
 
-// Header row
 .bt-header {
   padding: 0 2px;
   margin-bottom: 2px;
@@ -54,7 +53,6 @@ $bt-color: $accent-primary;
   }
 }
 
-// Switch styling
 switch {
   min-width: 36px;
   min-height: 18px;
@@ -75,7 +73,6 @@ switch {
   }
 }
 
-// Scan icon button (in header)
 .bt-menu .scan-icon-btn {
   padding: 4px;
   border-radius: 4px;
@@ -121,7 +118,6 @@ switch {
   margin: 4px 0;
 }
 
-// Device list
 .bt-device-list {
   padding: 0;
 }
@@ -161,4 +157,102 @@ switch {
 .bt-device-name {
   font-size: 12px;
   color: $text-secondary;
+}
+
+
+$text-primary-light: rgba(0, 0, 0, 0.9);
+$text-secondary-light: rgba(0, 0, 0, 0.7);
+$text-muted-light: rgba(0, 0, 0, 0.5);
+$hover-bg-light: rgba(0, 0, 0, 0.06);
+$active-bg-light: rgba(0, 0, 0, 0.1);
+$separator-color-light: rgba(0, 0, 0, 0.1);
+
+window.light-mode {
+  .bt-menu {
+    * {
+      color: $text-primary-light;
+    }
+  }
+
+  .bt-header image {
+    color: $text-secondary-light;
+  }
+
+  .bt-title {
+    color: $text-primary-light;
+  }
+
+  .bt-settings-btn {
+    image {
+      color: $text-muted-light;
+    }
+
+    &:hover {
+      background: $hover-bg-light;
+
+      image {
+        color: $text-secondary-light;
+      }
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+  }
+
+  .bt-menu switch {
+    background: rgba(0, 0, 0, 0.1);
+
+    &:checked {
+      background: $bt-color;
+    }
+  }
+
+  .bt-menu .scan-icon-btn {
+    image {
+      color: $text-muted-light;
+    }
+
+    &:hover {
+      background: $hover-bg-light;
+
+      image {
+        color: $text-secondary-light;
+      }
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+  }
+
+  .separator {
+    background: $separator-color-light;
+  }
+
+  .bt-device {
+    &:hover {
+      background: $hover-bg-light;
+    }
+
+    &:active {
+      background: $active-bg-light;
+    }
+
+    &.connected {
+      background: rgba($bt-color, 0.15);
+
+      .bt-device-name {
+        color: $text-primary-light;
+      }
+    }
+
+    image {
+      color: $text-muted-light;
+    }
+  }
+
+  .bt-device-name {
+    color: $text-secondary-light;
+  }
 }

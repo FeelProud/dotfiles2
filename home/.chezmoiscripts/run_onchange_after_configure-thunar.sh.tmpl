@@ -15,3 +15,11 @@ xdg-mime default thunar.desktop inode/directory
 xdg-mime default thunar.desktop application/x-wayland-gnome-saved-search
 
 echo "${OK} Thunar has been set as the default file manager." 2>&1
+
+printf "${NOTE} Configuring GTK theme and icons...\n"
+
+gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark'
+gsettings set org.gnome.desktop.interface gtk-theme 'Fluent-Dark'
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+
+echo "${OK} GTK theme (Fluent-Dark) and icons (Papirus-Dark) configured." 2>&1
