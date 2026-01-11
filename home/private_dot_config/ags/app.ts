@@ -12,16 +12,15 @@ import { BluetoothPopup } from "./modules/bluetooth";
 import { WifiPopup } from "./modules/wifi";
 import { PowerPopup } from "./modules/powermenu";
 import { AgendaPopup } from "./modules/quick-menu";
-import { AudioPopup, AppearancePopup } from "./modules/settings";
+import { AudioPopup, DisplayPopup } from "./modules/settings";
 import { NotificationPopup } from "./modules/notification";
 
-const DEBOUNCE_MS = 600;
 const barsByMonitor = new Map<string, string[]>();
 let syncTimer: number | null = null;
 
 const StaticWindows = [
     ArchLogoPopup, BatteryPopup, BluetoothPopup, WifiPopup,
-    PowerPopup, AgendaPopup, AudioPopup, AppearancePopup, OSD, NotificationPopup
+    PowerPopup, AgendaPopup, AudioPopup, DisplayPopup, OSD, NotificationPopup
 ];
 
 function getSafeId(connector: string): string {
@@ -67,10 +66,10 @@ function syncBarsWithMonitors(): boolean {
     for (let i = 0; i < monitors.get_n_items(); i++) {
         const mon = monitors.get_item(i) as Gdk.Monitor;
         const connector = mon.get_connector();
-        
+
         if (connector && !barsByMonitor.has(connector)) {
             const id = getSafeId(connector);
-            
+
             createRoot(() => {
                 const top = TopBar(mon, id);
                 const bottom = BottomBar(mon, id);
@@ -94,10 +93,10 @@ function setupMonitorWatcher() {
 
         if (added > 0) {
             if (syncTimer) GLib.source_remove(syncTimer);
-            
+
             syncTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 400, () => {
-                const created = syncBarsWithMonitors();
-                
+                syncBarsWithMonitors();
+
                 GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
                     syncBarsWithMonitors();
                     return GLib.SOURCE_REMOVE;

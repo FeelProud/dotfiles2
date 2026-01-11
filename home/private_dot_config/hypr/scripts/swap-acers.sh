@@ -23,6 +23,15 @@ else
     hyprctl --batch "keyword monitor $MON1,1920x1080@165,1600x0,1; keyword monitor $MON2,1920x1080@165,3520x0,1"
 fi
 
+# Get the monitor names at each position after the swap
+sleep 0.2
+CENTER_MON=$(hyprctl monitors -j | jq -r '.[] | select(.x == 1600) | .name')
+RIGHT_MON=$(hyprctl monitors -j | jq -r '.[] | select(.x == 3520) | .name')
+
+# Move workspace 2 to center monitor and workspace 3 to right monitor
+hyprctl dispatch moveworkspacetomonitor 2 "$CENTER_MON"
+hyprctl dispatch moveworkspacetomonitor 3 "$RIGHT_MON"
+
 # Restart AGS to update bars on new monitor layout
 pkill -x gjs
 sleep 0.3

@@ -9,6 +9,10 @@ ORANGE=$(tput setaf 166)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
+printf "${NOTE} Creating/updating XDG user directories...\n"
+xdg-user-dirs-update
+echo "${OK} XDG user directories updated." 2>&1
+
 printf "${NOTE} Setting Thunar as default file manager...\n"
 
 xdg-mime default thunar.desktop inode/directory

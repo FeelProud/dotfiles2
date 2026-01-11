@@ -20,11 +20,11 @@ export function PowerPopup() {
       <box orientation={Gtk.Orientation.VERTICAL} spacing={8} cssClasses={["power-menu"]}>
         <button
           cssClasses={["power-option"]}
-          onClicked={() => execAsync("systemctl poweroff")}
+          onClicked={() => execAsync("hyprlock")}
         >
           <box spacing={8}>
-            <label label="power_settings_new" cssClasses={["power-icon"]} />
-            <label label="Shutdown" />
+            <label label="lock" cssClasses={["power-icon"]} />
+            <label label="Lock" />
           </box>
         </button>
         <button
@@ -38,20 +38,11 @@ export function PowerPopup() {
         </button>
         <button
           cssClasses={["power-option"]}
-          onClicked={() => execAsync("systemctl suspend")}
+          onClicked={() => execAsync("systemctl poweroff")}
         >
           <box spacing={8}>
-            <label label="bedtime" cssClasses={["power-icon"]} />
-            <label label="Suspend" />
-          </box>
-        </button>
-        <button
-          cssClasses={["power-option"]}
-          onClicked={() => execAsync("hyprctl dispatch exit")}
-        >
-          <box spacing={8}>
-            <label label="logout" cssClasses={["power-icon"]} />
-            <label label="Logout" />
+            <label label="power_settings_new" cssClasses={["power-icon"]} />
+            <label label="Shutdown" />
           </box>
         </button>
       </box>

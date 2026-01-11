@@ -9,7 +9,7 @@ import { Agenda } from "../quick-menu"
 import { Battery } from "../power-control"
 import { Wifi } from "../wifi"
 import { Bluetooth } from "../bluetooth"
-import { Audio, Appearance } from "../settings"
+import { Audio, Display } from "../settings"
 
 export function TopBar(gdkmonitor: Gdk.Monitor, index: string | number) {
   const { TOP, LEFT, RIGHT } = Astal.WindowAnchor
@@ -37,7 +37,7 @@ export function TopBar(gdkmonitor: Gdk.Monitor, index: string | number) {
           <Wifi />
           <Bluetooth />
           <Audio />
-          <Appearance />
+          <Display />
           <Battery />
           <PowerButton />
         </box>

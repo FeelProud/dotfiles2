@@ -325,6 +325,7 @@ function QuickTools() {
         <RecordButton />
         <QuickToolButton icon="calculate" label="Calculator" command="qalculate-gtk" />
         <QuickToolButton icon="event" label="Agenda" command="gnome-calendar" />
+        <QuickToolButton icon="desktop_windows" label="Displays" command="nwg-displays" />
       </box>
     </box>
   )

@@ -9,7 +9,7 @@ ORANGE=$(tput setaf 166)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
-ags=(
+astal=(
   npm
   meson
   gjs
@@ -40,12 +40,10 @@ ags=(
   pacman-contrib
   power-profiles-daemon
   wf-recorder
-  hyprpicker
-  hyprsunset
-  hyprshot
   qalculate-gtk
   gnome-calendar
   btop
+  swww
   pacman-contrib
   ttf-cascadia-code-nerd
   ttf-material-symbols-variable-git
@@ -71,10 +69,10 @@ install_package() {
 }
 
 # Installation of main components
-printf "\n%s - Installing AGS \n" "${NOTE}"
-for AGS in "${ags[@]}"; do
-  install_package "$AGS" 2>&1 /dev/null
+printf "\n%s - Installing ASTAL \n" "${NOTE}"
+for ASTAL in "${astal[@]}"; do
+  install_package "$ASTAL" 2>&1 /dev/null
   if [ $? -ne 0 ]; then
-     echo -e "\e[1A\e[K${ERROR} - $AGS Package installation failed, Please check the installation logs"
+     echo -e "\e[1A\e[K${ERROR} - $ASTAL Package installation failed, Please check the installation logs"
   fi
 done
