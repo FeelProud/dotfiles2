@@ -4,13 +4,26 @@ OK="$(tput setaf 2)[OK]$(tput sgr0)"
 ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
 NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
 WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
-CAT="$(tput setaf 6)[ACTION]xorg-xhost$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
 ORANGE=$(tput setaf 166)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
+hypr=(
+  aquamarine
+  hyprshot
+  hyprcursor
+  hyprutils
+  hypridle
+  hyprlock
+  hyprland
+  hyprpaper
+  hyprpicker
+  hyprsunset
+)
 
-hypr_package=( 
+# System utilities for hyprland
+hypr_utils=(
   cliphist
   curl
   gvfs
@@ -21,11 +34,11 @@ hypr_package=(
   jq
   kitty
   kvantum
-  nano  
+  nano
   network-manager-applet
-  pamixer 
+  pamixer
   pavucontrol
-  pipewire-alsa 
+  pipewire-alsa
   playerctl
   polkit-gnome
   python-requests
@@ -34,77 +47,14 @@ hypr_package=(
   qt5ct
   qt6ct
   qt6-svg
-  satty 
+  satty
   wget
   wl-clipboard
   wl-clip-persist
   wlogout
   xdg-user-dirs
-  xdg-utils 
+  xdg-utils
   xorg-xhost
-)
-
-# simple apps packages
-hypr_package_2=(
-  btop
-  cava
-  imv
-  fastfetch
-  mousepad
-  vlc
-  vlc-plugin-ffmpeg
-  nvtop
-  nwg-displays
-  nwg-look
-  pacman-contrib
-  vim
-)
-
-# the following packages can be deleted. however, dotfiles may not work properly
-hypr_package_3=(
-  7zip
-  audacity
-  awsvpnclient
-  deluge-gtk
-  discord
-  burpsuite
-  burpsuite-pro
-  dnsx-bin
-  ffuf-bin
-  firefox
-  hashcat
-  httpx-bin
-  jdk21-openjdk
-  john
-  kanshi
-  katana-bin
-  kubectl
-  masscan
-  metasploit
-  mullvad-vpn-bin
-  networkmanager-openvpn
-  nmap
-  nuclei-bin
-  openvpn
-  postgresql
-  remmina
-  remmina-plugin-rdesktop
-  seclists
-  spotify
-  sqlmap
-  sourcemapper-git
-  telegram-desktop-bin
-  visual-studio-code-bin
-  wifite
-)
-
-# List of packages to uninstall as it conflicts some packages
-uninstall=(
-  aylurs-gtk-shell
-  dunst
-  mako
-  rofi
-  wallust-git
 )
 
 install_package() {
@@ -114,7 +64,7 @@ install_package() {
   else
     # Package not installed
     echo -e "${NOTE} Installing $1 ..."
-    paru -S --noconfirm "$1"
+    paru -S --noconfirm "$1" 2>&1
     # Making sure package is installed
     if paru -Q "$1" &>> /dev/null ; then
       echo -e "\e[1A\e[K${OK} $1 was installed."
@@ -147,31 +97,29 @@ uninstall_package() {
   return 0 
 }
 
-# uninstalling conflicting packages
-# Initialize a variable to track overall errors
-overall_failed=0
+# Removing other Hyprland to avoid conflict
+printf "${YELLOW} Checking for other hyprland packages and remove if any..${RESET}\n"
+if [ "$(command -v Hyprland)" ]; then
+  printf "${YELLOW} Hyprland detected. uninstalling to install Hyprland-git...${RESET}\n"
+  for hyprnvi in hyprland-git hyprland-nvidia hyprland-nvidia-git hyprland-nvidia-hidpi-git; do
+    uninstall_package "$hyprnvi" 2>/dev/null
+  done
+fi
 
-printf "\n%s - Removing Mako, Dunst, and rofi as they conflict with swaync and rofi-wayland \n" "${NOTE}"
-for PKG in "${uninstall[@]}"; do
-  uninstall_package "$PKG" 2>&1
+# Installing hyprland packages
+printf "${NOTE} Installing core hyprland packages...${RESET}\n"
+for HYPR in "${hypr[@]}"; do
+  install_package "$HYPR" 2>&1 /dev/null
   if [ $? -ne 0 ]; then
-    # Track if any uninstallation failed
-    overall_failed=1
+     echo -e "\e[1A\e[K${ERROR} - $HYPR Package installation failed, Please check the installation logs"
   fi
 done
 
-if [ $overall_failed -ne 0 ]; then
-  echo -e "${ERROR} Some packages failed to uninstall. Please check the log."
-fi
-
-
-# Installation of main components
-printf "\n%s - Installing hyprland packages.... \n" "${NOTE}"
-
-for PKG1 in "${hypr_package[@]}" "${hypr_package_2[@]}" "${hypr_package_3[@]}" ; do
-  install_package "$PKG1" 2>&1
+# Installing hyprland utilities
+printf "${NOTE} Installing hyprland utilities...${RESET}\n"
+for PKG in "${hypr_utils[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
   if [ $? -ne 0 ]; then
-    echo -e "\e[1A\e[K${ERROR} - $PKG1 Package installation failed, Please check the installation logs"
-    exit 1
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
   fi
 done

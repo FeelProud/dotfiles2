@@ -1,0 +1,132 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+# Communication apps
+communication=(
+  discord
+  telegram-desktop-bin
+)
+
+# Media apps
+media=(
+  audacity
+  cava
+  imv
+  spotify
+  vlc
+  vlc-plugin-ffmpeg
+)
+
+# Development tools
+dev_tools=(
+  firefox
+  jdk21-openjdk
+  mousepad
+  vim
+  visual-studio-code-bin
+  postgresql
+  kubectl
+)
+
+# VPN and network tools
+vpn_network=(
+  awsvpnclient
+  mullvad-vpn-bin
+  networkmanager-openvpn
+  openvpn
+)
+
+# Remote desktop
+remote=(
+  remmina
+  remmina-plugin-rdesktop
+)
+
+# System monitoring & utilities
+utilities=(
+  7zip
+  btop
+  deluge-gtk
+  fastfetch
+  kanshi
+  nvtop
+  nwg-displays
+  nwg-look
+  pacman-contrib
+)
+
+install_package() {
+  # Checking if package is already installed
+  if paru -Q "$1" &>> /dev/null ; then
+    echo -e "${OK} $1 is already installed. Skipping..."
+  else
+    # Package not installed
+    echo -e "${NOTE} Installing $1 ..."
+    paru -S --noconfirm "$1"
+    # Making sure package is installed
+    if paru -Q "$1" &>> /dev/null ; then
+      echo -e "\e[1A\e[K${OK} $1 was installed."
+    else
+      # Something is missing, exiting to review log
+      echo -e "\e[1A\e[K${ERROR} $1 failed to install :( , please check the install.log. You may need to install manually! Sorry I have tried :("
+      exit 1
+    fi
+  fi
+}
+
+# Installing all app categories
+printf "${NOTE} Installing communication apps...${RESET}\n"
+for PKG in "${communication[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Installing media apps...${RESET}\n"
+for PKG in "${media[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Installing development tools...${RESET}\n"
+for PKG in "${dev_tools[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Installing VPN and network tools...${RESET}\n"
+for PKG in "${vpn_network[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Installing remote desktop tools...${RESET}\n"
+for PKG in "${remote[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Installing system utilities...${RESET}\n"
+for PKG in "${utilities[@]}"; do
+  install_package "$PKG" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
