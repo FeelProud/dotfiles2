@@ -272,8 +272,8 @@ function QuickToolButton({
 function RecordButton() {
   const toggleRecording = async () => {
     if (isRecording()) {
-      execAsync(["pkill", "-SIGINT", "wf-recorder"]).catch((err) => {
-        logger.warn(`Could not stop wf-recorder: ${err}`)
+      execAsync(["pkill", "-SIGINT", "wl-screenrec"]).catch((err) => {
+        logger.warn(`Could not stop wl-screenrec: ${err}`)
       })
       setIsRecording(false)
     } else {
@@ -283,12 +283,23 @@ function RecordButton() {
         if (geometry) {
           const home = GLib.get_home_dir()
           const filename = `${home}/Videos/recording-${new Date().toISOString().replace(/[:.]/g, "-")}.mp4`
+          logger.info(`Starting recording: geometry="${geometry.trim()}", file="${filename}"`)
           setIsRecording(true)
-          execAsync(["wf-recorder", "-g", geometry.trim(), "-f", filename])
-            .then(() => setIsRecording(false))
-            .catch(() => setIsRecording(false))
+          execAsync(["env", "LIBVA_DRIVER_NAME=iHD", "wl-screenrec", "-g", geometry.trim(), "-f", filename])
+            .then(() => {
+              logger.info("wl-screenrec exited normally")
+              setIsRecording(false)
+            })
+            .catch((err) => {
+              logger.warn(`wl-screenrec failed: ${err}`)
+              setIsRecording(false)
+            })
+        } else {
+          logger.warn("slurp returned empty geometry")
         }
-      } catch {}
+      } catch (err) {
+        logger.warn(`slurp/recording error: ${err}`)
+      }
     }
   }
 

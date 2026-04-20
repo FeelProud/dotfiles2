@@ -6,7 +6,20 @@
 
 # Oh My Zsh
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="xiong-chiamiov-plus"
+ZSH_THEME=""  # Disabled - using Pure prompt instead
+
+# Pure prompt
+fpath+=("$HOME/.zsh/pure")
+autoload -U promptinit; promptinit
+
+# Pure colors (matching AGS/rofi theme)
+zstyle ':prompt:pure:path' color 205          # Light purple for path (#9b7dd4)
+zstyle ':prompt:pure:git:branch' color 205    # Pink for git branch (#d56199)
+zstyle ':prompt:pure:git:dirty' color 205     # Pink for dirty state
+zstyle ':prompt:pure:prompt:success' color 205  # Purple prompt symbol
+zstyle ':prompt:pure:prompt:error' color 204  # Soft red on error
+
+prompt pure
 
 # Plugins (Arch Linux + UX helpers)
 plugins=(
@@ -18,10 +31,10 @@ plugins=(
 
 source "$ZSH/oh-my-zsh.sh"
 
-# Aliases (eza with icons)
-alias ls='eza -a --icons'
-alias ll='eza -al --icons'
-alias lt='eza -a --tree --level=1 --icons'
+# Aliases
+alias ls='ls --color=auto'
+alias ll='ls -al --color=auto'
+alias lt='tree -L 1'
 
 # FZF key bindings (Ctrl-R fuzzy history)
 source <(fzf --zsh)
@@ -34,3 +47,13 @@ setopt appendhistory
 
 # For exegol
 alias exegol="sudo -E \"$HOME/.local/bin/exegol\""
+test -r ~/.dir_colors && eval $(dircolors ~/.dir_colors)
+
+# Created by `pipx` on 2026-02-14 22:05:29
+export PATH="$PATH:/home/marc/.local/bin"
+
+# Import go
+export PATH="$HOME/go/bin:$PATH"
+
+# Claude
+alias claude='IS_SANDBOX=1 claude --dangerously-skip-permissions --model claude-opus-4-7 --effort max'

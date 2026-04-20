@@ -1,4 +1,12 @@
-
 [Default Applications]
 inode/directory=thunar.desktop
 application/x-wayland-gnome-saved-search=thunar.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+
+[Added Associations]
+text/plain=code.desktop;

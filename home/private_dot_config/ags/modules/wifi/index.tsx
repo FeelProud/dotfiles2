@@ -14,7 +14,7 @@ const POPUP_NAME = "network-popup"
 const network = AstalNetwork.get_default()
 
 const [connectingBssid, setConnectingBssid] = createState<string | null>(null)
-const [passwordDialogAp, setPasswordDialogAp] = createState<{ bssid: string; ssid: string } | null>(null)
+const [passwordDialogAp, setPasswordDialogAp] = createState<{ bssid: string; ssid: string; isWpa3: boolean } | null>(null)
 const [passwordError, setPasswordError] = createState<string | null>(null)
 const [enterpriseDialogAp, setEnterpriseDialogAp] = createState<{ bssid: string; ssid: string } | null>(null)
 const [enterpriseError, setEnterpriseError] = createState<string | null>(null)
@@ -77,9 +77,9 @@ export function Wifi() {
   )
 }
 
-function openPasswordDialog(bssid: string, ssid: string) {
+function openPasswordDialog(bssid: string, ssid: string, isWpa3: boolean) {
   setPasswordError(null)
-  setPasswordDialogAp({ bssid, ssid })
+  setPasswordDialogAp({ bssid, ssid, isWpa3 })
 }
 
 function closePasswordDialog() {
@@ -100,6 +100,11 @@ function closeEnterpriseDialog() {
 function isEnterpriseNetwork(ap: AstalNetwork.AccessPoint): boolean {
   const FLAG_8021X = 0x200
   return ((ap.rsnFlags ?? 0) & FLAG_8021X) !== 0 || ((ap.wpaFlags ?? 0) & FLAG_8021X) !== 0
+}
+
+function isWpa3Network(ap: AstalNetwork.AccessPoint): boolean {
+  const FLAG_SAE = 0x400
+  return ((ap.rsnFlags ?? 0) & FLAG_SAE) !== 0
 }
 
 async function connectWithEnterprise(
@@ -181,60 +186,30 @@ method=auto
   }
 }
 
-async function connectWithPassword(bssid: string, ssid: string, password: string): Promise<{ success: boolean; error?: string }> {
-  if (!isValidBssid(bssid)) {
-    return { success: false, error: "Invalid network" }
-  }
+async function connectWithPassword(bssid: string, ssid: string, password: string, _useWpa3: boolean = false): Promise<{ success: boolean; error?: string }> {
   if (!isValidSsid(ssid)) {
     return { success: false, error: "Invalid network name" }
   }
-
-  const tmpDir = GLib.get_tmp_dir()
-  const tmpFile = `${tmpDir}/nm-wifi-${GLib.uuid_string_random()}.conf`
-  const safeSsid = escapeForKeyfile(ssid)
-  const safePassword = escapeForKeyfile(password)
+  if (!isValidBssid(bssid)) {
+    return { success: false, error: "Invalid network" }
+  }
 
   try {
-    const keyfileContent = `[connection]
-id=${safeSsid}
-type=wifi
+    // Delete any existing connection with this SSID first
+    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch(() => {})
 
-[wifi]
-ssid=${safeSsid}
-mode=infrastructure
-bssid=${bssid}
-
-[wifi-security]
-key-mgmt=wpa-psk
-psk=${safePassword}
-
-[ipv4]
-method=auto
-
-[ipv6]
-method=auto
-`
-    await writeFileAsync(tmpFile, keyfileContent)
-    await execAsync(["chmod", "600", tmpFile])
-    await execAsync(["nmcli", "connection", "load", tmpFile])
-    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
-      logger.warn(`Could not delete temp file: ${err}`)
-    })
-    await execAsync(["nmcli", "--wait", "30", "connection", "up", ssid])
+    // Use nmcli device wifi connect - handles WPA2/WPA3 automatically
+    await execAsync([
+      "nmcli", "--wait", "30", "device", "wifi", "connect", bssid,
+      "password", password
+    ])
 
     return { success: true }
   } catch (err: unknown) {
-    await execAsync(["rm", "-f", tmpFile]).catch((err) => {
-      logger.warn(`Could not delete temp file: ${err}`)
-    })
-    await execAsync(["nmcli", "connection", "delete", "id", ssid]).catch((err) => {
-      logger.warn(`Could not delete existing connection: ${err}`)
-    })
-
     const errorMsg = err instanceof Error ? err.message : String(err)
     let friendlyError = errorMsg
 
-    if (errorMsg.includes("Secrets were required") || errorMsg.includes("key-mgmt")) {
+    if (errorMsg.includes("Secrets were required") || errorMsg.includes("key-mgmt") || errorMsg.includes("psk")) {
       friendlyError = "Wrong password"
     } else if (errorMsg.includes("No network with SSID")) {
       friendlyError = "Network not found"
@@ -321,7 +296,7 @@ function InlinePasswordEntry() {
     setIsConnecting(true)
     setConnectingBssid(dialogAp.bssid)
 
-    const result = await connectWithPassword(dialogAp.bssid, dialogAp.ssid, password)
+    const result = await connectWithPassword(dialogAp.bssid, dialogAp.ssid, password, dialogAp.isWpa3)
 
     setIsConnecting(false)
     setConnectingBssid(null)
@@ -558,6 +533,7 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
   const isOpenNetwork = ap?.flags === 0 && ap?.wpaFlags === 0 && ap?.rsnFlags === 0
   const actuallyRequiresPassword = ap?.requiresPassword && !isOpenNetwork
   const isEnterprise = isEnterpriseNetwork(ap)
+  const isWpa3 = isWpa3Network(ap)
 
   const getStrengthIcon = (strength: number): string => {
     if (strength >= 80) return "network-wireless-signal-excellent-symbolic"
@@ -589,7 +565,7 @@ function AccessPointItem({ ap, activeApSsid }: { ap: AstalNetwork.AccessPoint; a
       if (isEnterprise) {
         openEnterpriseDialog(bssid, ssid)
       } else {
-        openPasswordDialog(bssid, ssid)
+        openPasswordDialog(bssid, ssid, isWpa3)
       }
     }
   }
