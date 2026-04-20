@@ -1,0 +1,105 @@
+/**
+ * AGS-style Application Launcher Theme - Light Mode
+ * Matches popup widget styling from ~/.config/ags/styles
+ */
+
+* {
+    /* Light mode colors */
+    popup-bg:         rgba(255, 255, 255, 0.85);
+    popup-bg-solid:   rgba(245, 245, 245, 0.95);
+    popup-border:     rgba(0, 0, 0, 0.1);
+    text-primary:     rgba(0, 0, 0, 0.9);
+    text-secondary:   rgba(0, 0, 0, 0.7);
+    text-muted:       rgba(0, 0, 0, 0.4);
+    hover-bg: rgba(255, 64, 129, 0.1);
+    active-bg: rgba(255, 64, 129, 0.15);
+    separator-color:  rgba(0, 0, 0, 0.1);
+    accent-color: #0166FF;
+
+    /* Font from AGS - Ubuntu Nerd Font */
+    font: "Ubuntu Nerd Font 11";
+
+    border:  0;
+    margin:  0;
+    padding: 0;
+    spacing: 0;
+}
+
+window {
+    width:            700px;
+    background-color: @popup-bg;
+    border-radius:    16px;
+    border:           1px;
+    border-color:     @popup-border;
+    padding:          12px;
+    location:         center;
+    anchor:           center;
+}
+
+mainbox {
+    background-color: transparent;
+    children:         [ inputbar, listview ];
+    spacing:          12px;
+}
+
+inputbar {
+    background-color: @popup-bg-solid;
+    border-radius:    8px;
+    border:           1px;
+    border-color:     @popup-border;
+    padding:          8px 12px;
+    children:         [ prompt, entry ];
+    spacing:          8px;
+}
+
+prompt {
+    background-color: transparent;
+    text-color:       @text-secondary;
+    vertical-align:   0.5;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @text-primary;
+    placeholder:      "Search";
+    placeholder-color: @text-muted;
+}
+
+listview {
+    background-color: transparent;
+    columns:          5;
+    lines:            3;
+    spacing:          8px;
+    fixed-columns:    true;
+    fixed-height:     true;
+    cycle:            true;
+}
+
+element {
+    background-color: transparent;
+    orientation:      vertical;
+    padding:          12px 8px;
+    border-radius:    8px;
+}
+
+element selected {
+    background-color: @active-bg;
+}
+
+element-icon {
+    background-color: transparent;
+    size:             64px;
+    horizontal-align: 0.5;
+    margin:           0px 0px 8px 0px;
+}
+
+element-text {
+    background-color: transparent;
+    text-color:       @text-primary;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+}
+
+element-text selected {
+    text-color:       @text-primary;
+}

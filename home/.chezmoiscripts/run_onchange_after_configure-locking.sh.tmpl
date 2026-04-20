@@ -37,6 +37,11 @@ if ! id "${USER_TO_AUTOLOGIN}" &>/dev/null; then
   exit 1
 fi
 
+if [[ "${USER_TO_AUTOLOGIN}" == "root" ]]; then
+  echo -e "${ERROR} Refusing to configure autologin for root. Re-run this script as your regular user (not via 'sudo su' or as root), or pass the username explicitly: $0 <username>"
+  exit 1
+fi
+
 # Prevent any DM from starting via the alias
 sudo systemctl mask display-manager.service 2>/dev/null || true
 echo -e "${OK} display-manager.service masked."
