@@ -37,10 +37,19 @@
         "*/.gitignore",
     ]
 
-[".oh-my-zsh/custom/themes/xiong-chiamiov-plus.zsh-theme"]
-    type = "file"
-    url = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/themes/xiong-chiamiov-plus.zsh-theme"
+[".zsh/pure"]
+    type = "archive"
+    url = "https://github.com/sindresorhus/pure/archive/main.tar.gz"
+    exact = true
+    stripComponents = 1
     refreshPeriod = "168h"
+    exclude = [
+        "*/.editorconfig",
+        "*/.gitattributes",
+        "*/.github",
+        "*/.gitignore",
+        "*/test",
+    ]
 
 [".local/share/fluent-gtk-theme"]
     type = "archive"
