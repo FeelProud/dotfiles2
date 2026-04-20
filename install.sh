@@ -27,9 +27,9 @@ if [ ! "$(command -v paru)" ]; then
     sudo pacman -Sy --noconfirm curl 2>&1 || { printf "%s - Failed to install git using AUR\n" "${ERROR}"; exit 1; }
   fi
 
-  git clone https://aur.archlinux.org/paru-bin.git || { printf "%s - Failed to clone paru-bin from AUR\n" "${ERROR}"; exit 1; }
-  cd paru-bin || { printf "%s - Failed to enter paru directory\n" "${ERROR}"; exit 1; }
-  makepkg -si --noconfirm 2>&1 || { printf "%s - Failed to install paru-bin from AUR\n" "${ERROR}"; exit 1; }
+  git clone https://aur.archlinux.org/paru.git || { printf "%s - Failed to clone paru from AUR\n" "${ERROR}"; exit 1; }
+  cd paru || { printf "%s - Failed to enter paru directory\n" "${ERROR}"; exit 1; }
+  makepkg -si --noconfirm 2>&1 || { printf "%s - Failed to install paru from AUR\n" "${ERROR}"; exit 1; }
   paru -Syu --noconfirm 2>&1 || { printf "%s - Failed to update system\n" "${ERROR}"; exit 1; }
   cd "$original_dir"
 fi
