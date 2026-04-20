@@ -41,3 +41,11 @@ for BASE in "${base[@]}"; do
      echo -e "\e[1A\e[K${ERROR} - $BASE Package installation failed, Please check the installation logs"
   fi
 done
+
+printf "\n%s - Installing kernel headers for all installed kernels \n" "${NOTE}"
+for krnl in $(cat /usr/lib/modules/*/pkgbase 2>/dev/null | sort -u); do
+  install_package "${krnl}-headers" 2>&1 /dev/null
+  if [ $? -ne 0 ]; then
+    echo -e "\e[1A\e[K${ERROR} - ${krnl}-headers installation failed, Please check the installation logs"
+  fi
+done
