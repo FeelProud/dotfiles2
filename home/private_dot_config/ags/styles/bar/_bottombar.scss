@@ -5,6 +5,7 @@ window.BottomBar {
 
   > centerbox > box:last-child {
     @include bar-section("end-bottom");
+    padding-right: 8px;
   }
 }
 

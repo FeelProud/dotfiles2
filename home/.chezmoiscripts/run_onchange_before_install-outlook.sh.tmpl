@@ -1,6 +1,6 @@
 #!/bin/bash
 
-{{ if .personal -}}
+{{ if not .work -}}
 exit 0
 {{ end -}}
 
@@ -13,9 +13,8 @@ ORANGE=$(tput setaf 166)
 YELLOW=$(tput setaf 3)
 RESET=$(tput sgr0)
 
-displaylink_pkg=(
-  displaylink
-  evdi-dkms
+outlook_pkg=(
+  outlook-for-linux-bin
 )
 
 install_package() {
@@ -33,23 +32,10 @@ install_package() {
   fi
 }
 
-printf "${NOTE} Installing DisplayLink packages...${RESET}\n"
-for PKG in "${displaylink_pkg[@]}"; do
+printf "${NOTE} Installing Outlook client...${RESET}\n"
+for PKG in "${outlook_pkg[@]}"; do
   install_package "$PKG" 2>&1
   if [ $? -ne 0 ]; then
     echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
   fi
 done
-
-printf "${NOTE} Enabling displaylink.service...${RESET}\n"
-sudo systemctl enable --now displaylink.service 2>&1 || true
-
-printf "${NOTE} Loading evdi kernel module...${RESET}\n"
-sudo modprobe evdi 2>&1 || true
-
-printf "${NOTE} Installing passwordless sudoers rule for safe-exit...${RESET}\n"
-sudo install -m 440 /dev/stdin /etc/sudoers.d/displaylink-restart <<EOF
-{{ .chezmoi.username }} ALL=(root) NOPASSWD: /usr/bin/systemctl stop displaylink.service, /usr/bin/systemctl start displaylink.service, /usr/bin/systemctl restart displaylink.service
-EOF
-
-printf "${OK} DisplayLink setup done. A reboot is recommended.\n"

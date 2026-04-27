@@ -4,7 +4,26 @@
 monitor=eDP-1,2560x1600@240.0,0x0,1.6
 monitor=DP-1,1920x1080@60.0,1600x0,1.0
 monitor=HDMI-A-1,1920x1080@60.0,1600x0,1.0
-{{- else }}
+{{- else if .work }}
 monitor=,preferred,auto,auto
-monitor=eDP-1,preferred,0x0,auto
+{{- if eq (.workLocation | default "office") "home" }}
+# Home: laptop top-aligned with the 2 Acers
+monitor=desc:Sharp Corporation 0x1542,preferred,0x0,1.5
+# Home: 2x Acer VG242Y (same description, distinguished by port)
+monitor=DVI-I-1,1920x1080@60.0,1280x0,1
+monitor=DVI-I-2,1920x1080@60.0,3200x0,1
+
+workspace = 1, monitor:desc:Sharp Corporation 0x1542, default:true, persistent:true
+workspace = 2, monitor:DVI-I-1, default:true, persistent:true
+workspace = 3, monitor:DVI-I-2, default:true, persistent:true
+{{- else }}
+# Office: laptop bottom-aligned (original layout)
+monitor=desc:Sharp Corporation 0x1542,preferred,0x360,1.5
+monitor=desc:Iiyama North America PL2492H,preferred,1280x0,1
+monitor=desc:Iiyama North America PLX2481H,preferred,3200x0,1
+
+workspace = 1, monitor:desc:Sharp Corporation 0x1542, default:true, persistent:true
+workspace = 2, monitor:desc:Iiyama North America PL2492H, default:true, persistent:true
+workspace = 3, monitor:desc:Iiyama North America PLX2481H, default:true, persistent:true
+{{- end }}
 {{- end }}

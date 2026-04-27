@@ -64,6 +64,7 @@ export function BottomBar(gdkmonitor: Gdk.Monitor, index: string | number) {
         <box $type="center" halign={Gtk.Align.CENTER} cssClasses={["empty-section"]} />
         <box $type="end" halign={Gtk.Align.END} spacing={4}>
           <LocalIP />
+          <box cssClasses={["ip-separator"]} />
           <RemoteIP />
         </box>
       </centerbox>

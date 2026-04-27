@@ -800,7 +800,11 @@ export function WifiPopup() {
               <Gtk.Switch
                 active={wiredState.as(s => isWiredConnected(s))}
                 sensitive={wiredState.as(s => canToggleWired(s))}
-                onNotify:active={() => { toggleWired() }}
+                onNotify:active={(sw: Gtk.Switch) => {
+                  if (isWiredConnected(wiredState.peek()) !== sw.active) {
+                    toggleWired()
+                  }
+                }}
               />
             </box>
             <box

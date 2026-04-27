@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Auto-connect VPN at startup when not on a trusted network.
+# Values injected by chezmoi from ~/.config/chezmoi/chezmoi.toml
+
+set -u
+
+VPN_NAME="{{ .autoVpn | default "" }}"
+TRUSTED_IPS=({{ range (default (list) .trustedIps) }}"{{ . }}" {{ end }})
+
+[[ -z "$VPN_NAME" ]] && exit 0
+[[ ${#TRUSTED_IPS[@]} -eq 0 ]] && exit 0
+
+notify() {
+  notify-send -a "Auto-VPN" "${@}" 2>/dev/null || true
+}
+
+# Wait for connectivity (up to ~60s)
+for _ in $(seq 1 30); do
+  if curl -sS --max-time 3 https://api.ipify.org >/dev/null 2>&1; then
+    break
+  fi
+  sleep 2
+done
+
+CURRENT_IP=$(curl -sS --max-time 5 https://api.ipify.org || true)
+
+if [[ -z "$CURRENT_IP" ]]; then
+  notify -i network-error-symbolic "Auto-VPN" "Impossible de récupérer l'IP publique"
+  exit 1
+fi
+
+for ip in "${TRUSTED_IPS[@]}"; do
+  if [[ "$CURRENT_IP" == "$ip" ]]; then
+    notify -i network-wired-symbolic "Réseau de confiance" "IP publique: $CURRENT_IP — VPN non requis"
+    exit 0
+  fi
+done
+
+if nmcli -t -f NAME,TYPE connection show --active 2>/dev/null | grep -qE "^${VPN_NAME}:vpn$"; then
+  exit 0
+fi
+
+if nmcli connection up "$VPN_NAME" >/dev/null 2>&1; then
+  notify -i network-vpn-symbolic "VPN activé" "${VPN_NAME} (IP non trustée: $CURRENT_IP)"
+else
+  notify -u critical -i network-vpn-disconnected-symbolic "Échec VPN" "Impossible d'activer ${VPN_NAME}"
+  exit 1
+fi

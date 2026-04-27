@@ -1,0 +1,276 @@
+import { Gtk } from "ags/gtk4"
+import { Accessor, For, createState } from "ags"
+import { execAsync } from "ags/process"
+import { createPoll } from "ags/time"
+import { PopupWindow, PopupButton } from "../popup"
+
+interface NetworkIPs {
+  ethernet: string
+  wifi: string
+}
+
+interface VpnInfo {
+  name: string
+  active: boolean
+}
+
+const POPUP_NAME = "network-info-popup"
+
+const TRUSTED_IPS: string[] = [{{ range $i, $ip := (default (list) .trustedIps) }}{{ if $i }}, {{ end }}"{{ $ip }}"{{ end }}]
+
+async function getNetworkIPs(): Promise<NetworkIPs> {
+  const result: NetworkIPs = { ethernet: "N/A", wifi: "N/A" }
+
+  try {
+    const response = await execAsync("ip -4 addr show")
+    const lines = response.split("\n")
+
+    let currentInterface = ""
+    for (const line of lines) {
+      const ifaceMatch = line.match(/^\d+:\s+(\w+):/)
+      if (ifaceMatch) {
+        currentInterface = ifaceMatch[1]
+      }
+
+      const ipMatch = line.match(/inet\s+(\d+\.\d+\.\d+\.\d+\/\d+)/)
+      if (ipMatch && currentInterface) {
+        const ipWithMask = ipMatch[1]
+        if (currentInterface === "lo") continue
+
+        if (currentInterface.startsWith("e") && result.ethernet === "N/A") {
+          result.ethernet = ipWithMask
+        } else if (currentInterface.startsWith("w") && result.wifi === "N/A") {
+          result.wifi = ipWithMask
+        }
+      }
+    }
+  } catch {}
+
+  return result
+}
+
+async function getVpns(): Promise<VpnInfo[]> {
+  try {
+    const [all, active] = await Promise.all([
+      execAsync(["bash", "-c", "nmcli -t -f NAME,TYPE connection show | awk -F: '$2==\"vpn\"{print $1}'"]),
+      execAsync(["bash", "-c", "nmcli -t -f NAME,TYPE connection show --active | awk -F: '$2==\"vpn\"{print $1}'"]),
+    ])
+    const activeSet = new Set(active.split("\n").map(s => s.trim()).filter(Boolean))
+    return all
+      .split("\n")
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(name => ({ name, active: activeSet.has(name) }))
+  } catch {
+    return []
+  }
+}
+
+const [vpns, setVpns] = createState<VpnInfo[]>([])
+const [connectingVpn, setConnectingVpn] = createState<string | null>(null)
+const [vpnEnabled, setVpnEnabled] = createState(false)
+const [remoteIp, setRemoteIp] = createState("...")
+
+const vpnConnected = new Accessor(
+  () => vpns.peek().some(v => v.active),
+  (cb) => vpns.subscribe(cb)
+)
+
+const isTrustedLocation = new Accessor(
+  () => vpns.peek().some(v => v.active) || TRUSTED_IPS.includes(remoteIp.peek()),
+  (cb) => {
+    const u1 = vpns.subscribe(cb)
+    const u2 = remoteIp.subscribe(cb)
+    return () => { u1(); u2() }
+  }
+)
+
+let refreshingVpns = false
+async function refreshVpnState() {
+  if (refreshingVpns) return
+  refreshingVpns = true
+  try {
+    setVpns(await getVpns())
+  } finally {
+    refreshingVpns = false
+  }
+}
+
+async function refreshRemoteIp() {
+  try {
+    const response = await execAsync("curl -s --max-time 5 https://api.ipify.org")
+    setRemoteIp(response.trim() || "N/A")
+  } catch {
+    setRemoteIp("N/A")
+  }
+}
+
+setInterval(refreshVpnState, 3000)
+refreshVpnState()
+setInterval(refreshRemoteIp, 60000)
+refreshRemoteIp()
+
+let lastConnected = false
+vpns.subscribe(() => {
+  const current = vpns.peek().some(v => v.active)
+  if (current === lastConnected) return
+  lastConnected = current
+  if (current && !vpnEnabled.peek()) setVpnEnabled(true)
+  setTimeout(refreshRemoteIp, 1500)
+  setTimeout(refreshRemoteIp, 4000)
+})
+
+async function toggleVpn(name: string, currentlyActive: boolean) {
+  if (connectingVpn.peek() !== null) return
+  setConnectingVpn(name)
+  const timeoutId = setTimeout(() => {
+    if (connectingVpn.peek() === name) setConnectingVpn(null)
+  }, 30000)
+  try {
+    if (currentlyActive) {
+      await execAsync(["nmcli", "connection", "down", name])
+    } else {
+      await execAsync(["nmcli", "connection", "up", name])
+    }
+  } catch (e) {
+    console.warn(`VPN toggle failed for ${name}:`, e)
+  } finally {
+    clearTimeout(timeoutId)
+    setConnectingVpn(null)
+    refreshVpnState()
+  }
+}
+
+async function disconnectAllVpns() {
+  try {
+    const active = vpns.peek().filter(v => v.active).map(v => v.name)
+    await Promise.all(active.map(name => execAsync(["nmcli", "connection", "down", name])))
+  } catch (e) {
+    console.warn("VPN disconnect-all failed:", e)
+  } finally {
+    refreshVpnState()
+  }
+}
+
+export function LocalIP() {
+  const networkIPs = createPoll<NetworkIPs>({ ethernet: "N/A", wifi: "N/A" }, 30000, getNetworkIPs)
+
+  return (
+    <box spacing={8}>
+      <button cssClasses={["ip-widget"]}>
+        <box spacing={4} valign={Gtk.Align.CENTER}>
+          <label label="settings_ethernet" cssClasses={["bar-icon"]} valign={Gtk.Align.CENTER} />
+          <label label={networkIPs.as(ips => ips.ethernet)} valign={Gtk.Align.CENTER} />
+        </box>
+      </button>
+
+      <button cssClasses={["ip-widget"]}>
+        <box spacing={4} valign={Gtk.Align.CENTER}>
+          <label label="wifi" cssClasses={["bar-icon"]} valign={Gtk.Align.CENTER} />
+          <label label={networkIPs.as(ips => ips.wifi)} valign={Gtk.Align.CENTER} />
+        </box>
+      </button>
+    </box>
+  )
+}
+
+export function RemoteIP() {
+  return (
+    <PopupButton popupName={POPUP_NAME} cssClasses={["ip-widget", "remote-ip"]}>
+      <box
+        spacing={4}
+        valign={Gtk.Align.CENTER}
+        cssClasses={isTrustedLocation.as(v => v ? ["vpn-state", "vpn-active"] : ["vpn-state", "vpn-inactive"])}
+      >
+        <label label="public" cssClasses={["bar-icon"]} valign={Gtk.Align.CENTER} />
+        <label label={remoteIp} valign={Gtk.Align.CENTER} />
+      </box>
+    </PopupButton>
+  )
+}
+
+function VpnItem({ vpn }: { vpn: VpnInfo }) {
+  const isConnecting = connectingVpn.as(n => n === vpn.name)
+  const anyConnecting = connectingVpn.as(n => n !== null)
+
+  const cssClasses = new Accessor(
+    () => {
+      const classes = ["vpn-item"]
+      if (vpn.active) classes.push("connected")
+      if (connectingVpn.peek() === vpn.name) classes.push("connecting")
+      return classes
+    },
+    (cb) => connectingVpn.subscribe(cb)
+  )
+
+  return (
+    <button
+      cssClasses={cssClasses}
+      onClicked={() => toggleVpn(vpn.name, vpn.active)}
+      sensitive={anyConnecting.as(c => !c)}
+    >
+      <box spacing={8}>
+        <Gtk.Image iconName={vpn.active ? "network-vpn-symbolic" : "network-vpn-disconnected-symbolic"} pixelSize={14} />
+        <label label={vpn.name} hexpand halign={Gtk.Align.START} ellipsize={3} />
+        <label
+          label="progress_activity"
+          cssClasses={["bar-icon", "spinning"]}
+          visible={isConnecting}
+        />
+        <Gtk.Image
+          iconName="object-select-symbolic"
+          pixelSize={12}
+          visible={isConnecting.as(c => vpn.active && !c)}
+        />
+      </box>
+    </button>
+  )
+}
+
+export function NetworkInfoPopup() {
+  return (
+    <PopupWindow name={POPUP_NAME} position="bottom-right">
+      <box orientation={Gtk.Orientation.VERTICAL} spacing={6} cssClasses={["vpn-menu"]}>
+        <box cssClasses={["vpn-header"]} spacing={8}>
+          <Gtk.Image iconName="network-vpn-symbolic" pixelSize={14} />
+          <label cssClasses={["vpn-title"]} label="VPN" hexpand halign={Gtk.Align.START} />
+          <Gtk.Switch
+            active={vpnEnabled}
+            onNotify:active={(sw: Gtk.Switch) => {
+              if (sw.active) {
+                if (!vpnEnabled.peek()) setVpnEnabled(true)
+              } else {
+                if (vpnEnabled.peek()) setVpnEnabled(false)
+                if (vpnConnected.peek()) disconnectAllVpns()
+              }
+            }}
+            tooltipText="Enable VPN selection (toggle off to disconnect all)"
+          />
+        </box>
+
+        <box cssClasses={["separator"]} visible={vpns.as(v => v.length > 0)} />
+
+        <Gtk.ScrolledWindow
+          cssClasses={vpnEnabled.as(v => v ? ["vpn-scroll"] : ["vpn-scroll", "inactive"])}
+          hscrollbarPolicy={Gtk.PolicyType.NEVER}
+          vscrollbarPolicy={Gtk.PolicyType.AUTOMATIC}
+          propagateNaturalHeight
+          maxContentHeight={256}
+          visible={vpns.as(v => v.length > 0)}
+        >
+          <box orientation={Gtk.Orientation.VERTICAL} spacing={2} cssClasses={["vpn-list"]}>
+            <For each={vpns}>
+              {(vpn) => <VpnItem vpn={vpn} />}
+            </For>
+          </box>
+        </Gtk.ScrolledWindow>
+
+        <label
+          cssClasses={["vpn-empty"]}
+          label="No VPN configured"
+          visible={vpns.as(v => v.length === 0)}
+        />
+      </box>
+    </PopupWindow>
+  )
+}

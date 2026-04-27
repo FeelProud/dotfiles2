@@ -1,0 +1,28 @@
+#!/bin/bash
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+
+XDG_DIRS_FILE="${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
+
+if [ ! -f "$XDG_DIRS_FILE" ]; then
+    exit 0
+fi
+
+printf "${NOTE} Ensuring XDG user directories exist...\n"
+
+set -a
+# shellcheck disable=SC1090
+. "$XDG_DIRS_FILE"
+set +a
+
+for var in XDG_DESKTOP_DIR XDG_DOWNLOAD_DIR XDG_TEMPLATES_DIR \
+           XDG_PUBLICSHARE_DIR XDG_DOCUMENTS_DIR XDG_MUSIC_DIR \
+           XDG_PICTURES_DIR XDG_VIDEOS_DIR; do
+    dir="${!var}"
+    if [ -n "$dir" ] && [ "$dir" != "$HOME" ] && [ "$dir" != "$HOME/" ]; then
+        mkdir -p "$dir"
+    fi
+done
+
+echo "${OK} XDG user directories ready." 2>&1

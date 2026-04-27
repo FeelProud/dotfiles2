@@ -68,6 +68,8 @@ function updateAccentColorCSS(color: string) {
     .net-item.connected image { color: ${color}; }
     .net-status.connected { background-color: ${rgba15}; }
     .net-status.connected image { color: ${color}; }
+    .vpn-item.connected { background-color: ${rgba15}; }
+    .vpn-item.connected image { color: ${color}; }
     .net-menu .scan-icon-btn.scanning image { color: ${color}; }
     .net-menu .scan-icon-btn spinner { color: ${color}; }
     .wifi-password-inline entry:focus { border-color: ${color}; }

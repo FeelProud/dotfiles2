@@ -14,13 +14,15 @@ import { PowerPopup } from "./modules/powermenu";
 import { AgendaPopup } from "./modules/quick-menu";
 import { AudioPopup, DisplayPopup } from "./modules/settings";
 import { NotificationPopup } from "./modules/notification";
+import { NetworkInfoPopup } from "./modules/network-info";
 
 const barsByMonitor = new Map<string, string[]>();
 let syncTimer: number | null = null;
 
 const StaticWindows = [
     ArchLogoPopup, BatteryPopup, BluetoothPopup, WifiPopup,
-    PowerPopup, AgendaPopup, AudioPopup, DisplayPopup, OSD, NotificationPopup
+    PowerPopup, AgendaPopup, AudioPopup, DisplayPopup, OSD, NotificationPopup,
+    NetworkInfoPopup
 ];
 
 function getSafeId(connector: string): string {

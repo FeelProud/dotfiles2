@@ -1,0 +1,129 @@
+#!/bin/bash
+
+{{ if not .work -}}
+exit 0
+{{ end -}}
+
+OK="$(tput setaf 2)[OK]$(tput sgr0)"
+ERROR="$(tput setaf 1)[ERROR]$(tput sgr0)"
+NOTE="$(tput setaf 3)[NOTE]$(tput sgr0)"
+WARN="$(tput setaf 5)[WARN]$(tput sgr0)"
+CAT="$(tput setaf 6)[ACTION]$(tput sgr0)"
+ORANGE=$(tput setaf 166)
+YELLOW=$(tput setaf 3)
+RESET=$(tput sgr0)
+
+yubikey_pkg=(
+  libfido2
+  yubikey-manager
+  pcsclite
+  ccid
+  yubico-authenticator
+)
+
+install_package() {
+  if paru -Q "$1" &>> /dev/null ; then
+    echo -e "${OK} $1 is already installed. Skipping..."
+  else
+    echo -e "${NOTE} Installing $1 ..."
+    paru -S --noconfirm "$1" 2>&1
+    if paru -Q "$1" &>> /dev/null ; then
+      echo -e "\e[1A\e[K${OK} $1 was installed."
+    else
+      echo -e "\e[1A\e[K${ERROR} $1 failed to install :( , please check the install.log. You may need to install manually! Sorry I have tried :("
+      exit 1
+    fi
+  fi
+}
+
+printf "${NOTE} Installing YubiKey packages...${RESET}\n"
+for PKG in "${yubikey_pkg[@]}"; do
+  install_package "$PKG" 2>&1
+  if [ $? -ne 0 ]; then
+    echo -e "\e[1A\e[K${ERROR} - $PKG Package installation failed, Please check the installation logs"
+  fi
+done
+
+printf "${NOTE} Enabling pcscd.socket...${RESET}\n"
+sudo systemctl enable --now pcscd.socket 2>&1 || true
+
+{{ if .yubikeySerial -}}
+printf "${NOTE} Installing YubiKey lock-watcher (serial: {{ .yubikeySerial }})...${RESET}\n"
+
+sudo tee /usr/local/bin/yubikey-lock-watcher.sh >/dev/null <<'WATCHER_EOF'
+#!/bin/bash
+# Lock all sessions when the trusted YubiKey is removed.
+# Triggered async via udev -> systemd oneshot.
+EXPECTED_SERIAL="{{ .yubikeySerial }}"
+STATE_FILE="/run/yubikey-trusted-present"
+LOG_TAG="yubikey-lock-watcher"
+
+if /usr/bin/ykman list 2>/dev/null | grep -qE "Serial: ${EXPECTED_SERIAL}\b"; then
+  if [ ! -f "$STATE_FILE" ]; then
+    : > "$STATE_FILE"
+    /usr/bin/logger -t "$LOG_TAG" "trusted YubiKey present"
+  fi
+else
+  if [ -f "$STATE_FILE" ]; then
+    rm -f "$STATE_FILE"
+    /usr/bin/logger -t "$LOG_TAG" "trusted YubiKey removed -> locking sessions"
+    /usr/bin/loginctl lock-sessions
+  fi
+fi
+WATCHER_EOF
+sudo chmod 0755 /usr/local/bin/yubikey-lock-watcher.sh
+
+sudo tee /etc/systemd/system/yubikey-lock-watcher.service >/dev/null <<'UNIT_EOF'
+[Unit]
+Description=YubiKey trusted-key lock watcher
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/yubikey-lock-watcher.sh
+UNIT_EOF
+sudo systemctl daemon-reload
+
+sudo tee /etc/udev/rules.d/99-yubikey-lock.rules >/dev/null <<'RULE_EOF'
+# add: filter on Yubico vendor (env vars are populated on add events)
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ACTION=="add", ENV{ID_VENDOR_ID}=="1050", RUN+="/usr/bin/systemctl --no-block start yubikey-lock-watcher.service"
+# remove: ID_VENDOR_ID is absent on remove events; fire on any usb_device removal and let the script verify via ykman
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ACTION=="remove", RUN+="/usr/bin/systemctl --no-block start yubikey-lock-watcher.service"
+RULE_EOF
+
+# PAM: require trusted YubiKey to be present for hyprlock unlock (no touch, just presence check)
+printf "${NOTE} Installing PAM presence check for hyprlock...${RESET}\n"
+sudo tee /usr/local/bin/check-yubikey-present.sh >/dev/null <<'CHECK_EOF'
+#!/bin/bash
+EXPECTED_SERIAL="{{ .yubikeySerial }}"
+/usr/bin/ykman list 2>/dev/null | grep -qE "Serial: ${EXPECTED_SERIAL}\b"
+CHECK_EOF
+sudo chmod 0755 /usr/local/bin/check-yubikey-present.sh
+
+# Startup lock: if YubiKey is absent at session start, lock immediately
+sudo tee /usr/local/bin/yubikey-lock-if-absent.sh >/dev/null <<'STARTUP_EOF'
+#!/bin/bash
+EXPECTED_SERIAL="{{ .yubikeySerial }}"
+# Immediate lock: spawn hyprlock directly (bypass loginctl/hypridle to minimize exposure window)
+if ! /usr/bin/ykman list 2>/dev/null | grep -qE "Serial: ${EXPECTED_SERIAL}\b"; then
+  exec /usr/bin/hyprlock
+fi
+STARTUP_EOF
+sudo chmod 0755 /usr/local/bin/yubikey-lock-if-absent.sh
+
+PAM_LINE='auth        required    pam_exec.so quiet /usr/local/bin/check-yubikey-present.sh'
+if ! sudo grep -qF "check-yubikey-present.sh" /etc/pam.d/hyprlock; then
+  sudo cp /etc/pam.d/hyprlock /etc/pam.d/hyprlock.bak.$(date +%s)
+  sudo sed -i "0,/^auth/ s|^auth|${PAM_LINE}\nauth|" /etc/pam.d/hyprlock
+  printf "${OK} PAM line added to /etc/pam.d/hyprlock${RESET}\n"
+else
+  printf "${OK} PAM line already present, skipping${RESET}\n"
+fi
+{{ else -}}
+printf "${WARN} yubikeySerial not set in ~/.config/chezmoi/chezmoi.toml -- skipping lock-watcher and PAM install.${RESET}\n"
+{{ end -}}
+
+printf "${NOTE} Reloading udev rules...${RESET}\n"
+sudo udevadm control --reload 2>&1 || true
+sudo udevadm trigger 2>&1 || true
+
+printf "${OK} YubiKey setup done. Unplug/replug the key for udev rules to apply.\n"

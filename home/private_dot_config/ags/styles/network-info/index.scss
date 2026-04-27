@@ -1,4 +1,109 @@
+@use "../variables" as *;
+
 .ip-widget .bar-icon {
   margin-bottom: 4px;
   margin-right: 1px;
+}
+
+.ip-separator {
+  min-width: 1px;
+  min-height: 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 0 4px;
+}
+
+.ip-widget .vpn-state.vpn-active {
+  color: #2ecc71;
+
+  .bar-icon {
+    color: #2ecc71;
+  }
+}
+
+.ip-widget .vpn-state.vpn-inactive {
+  color: #e74c3c;
+
+  .bar-icon {
+    color: #e74c3c;
+  }
+}
+
+$vpn-color: $accent-primary;
+
+.vpn-menu {
+  min-width: 90px;
+  padding: 4px;
+}
+
+.vpn-scroll {
+  transition: opacity 150ms ease;
+
+  &.inactive {
+    opacity: 0.5;
+  }
+}
+
+.vpn-header {
+  padding: 0 2px;
+  margin-bottom: 2px;
+
+  image {
+    color: $text-secondary;
+  }
+}
+
+.vpn-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-primary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vpn-list {
+  padding: 0;
+}
+
+.vpn-item {
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  transition: background 100ms ease;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:active {
+    background: $active-bg;
+  }
+
+  &.connected {
+    background: rgba($vpn-color, 0.15);
+
+    label {
+      color: $text-primary;
+    }
+
+    image {
+      color: $vpn-color;
+    }
+  }
+
+  label {
+    font-size: 12px;
+    color: $text-secondary;
+  }
+
+  image {
+    color: $text-muted;
+  }
+}
+
+.vpn-empty {
+  padding: 8px;
+  font-size: 12px;
+  color: $text-muted;
+  font-style: italic;
 }
