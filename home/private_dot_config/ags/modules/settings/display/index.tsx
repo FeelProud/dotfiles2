@@ -248,16 +248,42 @@ gtk-xft-rgba=rgb
       win.remove_css_class("light-mode")
     }
   }
+}
+
+export type WallpaperMode = "black" | "white"
+let currentWallpaper: WallpaperMode = "black"
+const wallpaperSubscribers: Set<() => void> = new Set()
+
+const wallpaperValue = new Accessor(
+  () => currentWallpaper,
+  (callback) => {
+    wallpaperSubscribers.add(callback)
+    return () => wallpaperSubscribers.delete(callback)
+  }
+)
+
+const setWallpaper = (mode: WallpaperMode) => {
+  currentWallpaper = mode
+  wallpaperSubscribers.forEach((cb) => cb())
 
   const wallDir = "/home/marc/.config/hypr/wallpapers"
-  const globalConfigs = "/home/marc/.config/hypr/global_configs"
-  writeFileAsync(`${globalConfigs}/wallpaper`, mode).catch((err) => {
+  writeFileAsync(`${GLOBAL_CONFIGS_DIR}/wallpaper`, mode).catch((err) => {
     logger.warn(`Could not write wallpaper mode: ${err}`)
   })
-  execAsync(["swww", "img", `${wallDir}/${mode}.png`, "--transition-type", "fade", "--transition-duration", "0.5"]).catch((err) => {
-    logger.error("Failed to set wallpaper with swww", err)
+  execAsync(["awww", "img", `${wallDir}/${mode}.png`, "--transition-type", "fade", "--transition-duration", "0.5"]).catch((err) => {
+    logger.error("Failed to set wallpaper with awww", err)
   })
 }
+
+execAsync(["cat", `${GLOBAL_CONFIGS_DIR}/wallpaper`]).then((output) => {
+  const mode = output.trim()
+  if (mode === "black" || mode === "white") {
+    currentWallpaper = mode
+    wallpaperSubscribers.forEach((cb) => cb())
+  }
+}).catch((err) => {
+  logger.warn(`Could not read wallpaper mode: ${err}`)
+})
 
 const applyInitialTheme = () => {
   const windows = app.get_windows()
@@ -437,6 +463,25 @@ export function DisplayPopup() {
               active={themeValue.as((t) => t === "dark")}
               onStateSet={(sw: Gtk.Switch) => {
                 setTheme(sw.get_active() ? "dark" : "light")
+                return false
+              }}
+            />
+          </box>
+        </box>
+
+        <box cssClasses={["separator"]} />
+
+        <box orientation={Gtk.Orientation.VERTICAL} spacing={4} cssClasses={["settings-section"]}>
+          <box cssClasses={["section-title"]} spacing={6}>
+            <label
+              label="wallpaper"
+              cssClasses={["material-icon-small"]}
+            />
+            <label cssClasses={["section-title-label"]} label="Black Wallpaper" hexpand halign={Gtk.Align.START} />
+            <Gtk.Switch
+              active={wallpaperValue.as((w) => w === "black")}
+              onStateSet={(sw: Gtk.Switch) => {
+                setWallpaper(sw.get_active() ? "black" : "white")
                 return false
               }}
             />

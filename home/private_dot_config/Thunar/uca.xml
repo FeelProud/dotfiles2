@@ -182,8 +182,8 @@ Kali Linux-style Thunar Custom Actions adapted for Arch Linux
 	<name>Set as Wallpaper</name>
 	<submenu></submenu>
 	<unique-id>1700000000000003-1</unique-id>
-	<command>swww img %f</command>
-	<description>Set image as wallpaper (Hyprland/swww)</description>
+	<command>awww img %f</command>
+	<description>Set image as wallpaper (Hyprland/awww)</description>
 	<range></range>
 	<patterns>*.jpg;*.jpeg;*.png;*.gif;*.webp;*.bmp</patterns>
 	<image-files/>
